@@ -1,16 +1,25 @@
 {
-  "name": "generate-responsive-img.jsx",
+  "name": "responsive-image-generator",
+  "displayName": "Responsive image generator",
   "version": "1.0.0",
   "private": "true",
-  "description": "A plugin to extend PhotoShop's default asset generation behaviour",
+  "description": "A plugin to extend Adobe® Photoshop's default `Generate > Assets` behaviour.",
   "keywords": [
     "Photoshop",
     "Responsive imagery"
   ],
-  "license": "ISC",
+  "homepage": "https://github.com/danmad/responsive-image-generator#readme",
+  "bugs": {
+    "url": "https://github.com/danmad/responsive-image-generator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danmad/responsive-image-generator"
+  },
   "author": "DanMad",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
+    "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.jsx --extensions \".ts\" --ignore '**/*.test.ts'",
     "sort": "sort-package-json"
   },
   "husky": {
@@ -19,11 +28,16 @@
     }
   },
   "devDependencies": {
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-typescript": "^7.10.1",
     "husky": "^4.2.5",
-    "jest": "^25.4.0",
     "prettier": "^2.0.5",
     "pretty-quick": "^2.0.1",
     "sort-package-json": "^1.44.0",
+    "types-for-adobe": "github:pravdomil/types-for-adobe",
+    "typescript": "^3.9.5",
     "uglify-js": "^3.9.3"
   }
 }

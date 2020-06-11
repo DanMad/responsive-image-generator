@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "None",
+    "noLib": true,
+    "strict": true,
+    "target": "ES3",
+    "types": [
+      "types-for-adobe/photoshop/2015.5"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
