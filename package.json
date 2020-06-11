@@ -1,0 +1,29 @@
+{
+  "name": "generate-responsive-img.jsx",
+  "version": "1.0.0",
+  "private": "true",
+  "description": "A plugin to extend PhotoShop's default asset generation behaviour",
+  "keywords": [
+    "Photoshop",
+    "Responsive imagery"
+  ],
+  "license": "ISC",
+  "author": "DanMad",
+  "main": "index.js",
+  "scripts": {
+    "sort": "sort-package-json"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "devDependencies": {
+    "husky": "^4.2.5",
+    "jest": "^25.4.0",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1",
+    "sort-package-json": "^1.44.0",
+    "uglify-js": "^3.9.3"
+  }
+}
