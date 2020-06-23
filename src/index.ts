@@ -1,14 +1,13 @@
+// Polyfills
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 // Extends the Object object's interface to include support for Object.keys().
 declare interface Object {
   keys: (obj: any) => string[];
 }
 
 if (!Object.keys) {
-  Object.keys = ((): ((obj: any) => string[]) => {
-    const hasOwnProperty = Object.prototype.hasOwnProperty;
-    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(
-      `toString`
-    );
+  Object.keys = (function (): (obj: any) => string[] {
     const dontEnums: string[] = [
       `toString`,
       `toLocaleString`,
@@ -18,19 +17,22 @@ if (!Object.keys) {
       `propertyIsEnumerable`,
       `constructor`,
     ];
-    const dontEnumsLength: number = dontEnums.length;
+    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(
+      `toString`
+    );
+    const hasOwnProperty: (name: string) => boolean =
+      Object.prototype.hasOwnProperty;
 
-    return (obj: any): string[] => {
+    return function (obj: any): string[] {
       if (
         typeof obj !== `function` &&
         (typeof obj !== `object` || obj === null)
       ) {
-        alert(`ERROR: Object.keys called on non-object`);
+        // ! Determine appropriate error handling solution
         // throw new TypeError('Object.keys called on non-object');
       }
 
       const result: string[] = [];
-      let prop: number;
 
       for (let prop in obj) {
         if (hasOwnProperty.call(obj, prop)) {
@@ -39,7 +41,7 @@ if (!Object.keys) {
       }
 
       if (hasDontEnumBug) {
-        for (let i: number = 0; i < dontEnumsLength; i++) {
+        for (let i: number = 0; i < dontEnums.length; i++) {
           if (hasOwnProperty.call(obj, dontEnums[i])) {
             result.push(dontEnums[i]);
           }
@@ -63,26 +65,19 @@ if (!String.prototype.trim) {
   };
 }
 
-interface Asset {
-  definition?: string;
-  dimensions?: string;
-  extension: string;
-  name: string;
-  quality?: string;
-  size: string;
-}
+// Configuration
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-interface Assets {
-  xxs?: Asset[];
-  xs?: Asset[];
-  s?: Asset[];
-  m?: Asset[];
-  l?: Asset[];
-  xl?: Asset[];
-  xxl?: Asset[];
-}
+// ...
 
-type AssetArgument =
+// Application
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+type Asset = {
+  [key in AssetArg]?: string;
+};
+
+// Needs attending to
+type AssetArg =
   | `definition`
   | `dimensions`
   | `extension`
@@ -90,126 +85,127 @@ type AssetArgument =
   | `quality`
   | `size`;
 
-const formatSize = (size: string): string => {
-  let formattedSize: string = size;
-
-  formattedSize.replace(/(e?x(tra)?)-*/gi, `x`);
-  formattedSize.replace(/s(m(al)?l)?/i, `s`);
-  formattedSize.replace(/m(ed(ium)?)?/i, `s`);
-  formattedSize.replace(/l((ar)?ge)?/i, `s`);
-
-  return formattedSize;
+type AssetArgRegExps = {
+  [key in AssetArg]: RegExp;
 };
 
-const getAssets = (callback: (assets: Assets) => void): void => {
-  const checkLayers = (
-    layers: Layers,
-    callback: (assets: Assets) => void
-  ): void => {
-    const getArg = (str: string, arg: AssetArgument): string => {
-      const regExps = {
-        definition: /@?[1-9]x?(?=\.(gif|jpe?g|png))/i,
-        dimensions: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)(?=\s)/i,
-        extension: /\.(gif|jpe?g|png)/i,
-        name: /[a-z][\w@-]+(?=\.(gif|jpe?g|png))/i,
-        quality: /(([1-9][0-9]?|100)%|10|[1-9])(?=\s*?(,|$))/,
-        size: /(s(m(al)?l)?|m(ed(ium)?)?|l((ar)?ge)?)(?=(-+@?[1-9]x?)?\.(gif|jpe?g|png))/i,
-      };
+type Assets = {
+  [key in AssetSizeArg]?: Asset[];
+};
 
-      if (regExps[arg].test(str)) {
-        return str.match(regExps[arg])![0];
-      } else {
-        return ``;
-      }
+type AssetSizeArg = `xxs` | `xs` | `s` | `m` | `l` | `xl` | `xxl`;
+
+const formatSize = (size: string): string => {
+  return size
+    .replace(/(e?x(tra)?-*)/gi, `x`)
+    .replace(/s(m(al)?l)?/i, `s`)
+    .replace(/m(ed(ium)?)?/i, `m`)
+    .replace(/l((ar)?ge)?/i, `l`);
+};
+
+const getAssets = (cb: (assets: Assets) => void): void => {
+  const scanLayers = (layers: Layers, cb: (assets: Assets) => void): void => {
+    const getArg = (str: string, arg: AssetArg): string => {
+      return str.match(argRegExps[arg])![0];
     };
-
+    const hasArg = (str: string, arg: AssetArg): boolean => {
+      return argRegExps[arg].test(str);
+    };
     const hasAsset = (str: string): boolean => {
-      return /\.(gif|jpe?g|png)/i.test(str);
+      return argRegExps.extension.test(str);
     };
-
-    const isAssetLayer = (layer: Layer): boolean => {
-      return hasAsset(layer.name);
-    };
-
-    const isGroup = (layer: Layer): layer is LayerSet => {
+    const isLayerSet = (layer: Layer): layer is LayerSet => {
       return layer.typename === `LayerSet`;
     };
 
-    layerDepth++;
+    // Needs attending to
+    const argRegExps: AssetArgRegExps = {
+      definition: /@?[1-9]x?$/i,
+      dimensions: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)(?=\s)/i,
+      extension: /\.(gif|jpe?g|png)/i,
+      name: /^.+$/i,
+      quality: /(([1-9][0-9]?|100)%|10|[1-9])$/,
+      size: /(m(ed(ium)?)?|(e?x(tra)?-*){0,2}(s(m(al)?l)?|l((ar)?ge)?))$/i,
+    };
+
+    scanDepth++;
 
     for (let i: number = 0; i < layers.length; i++) {
       const layer: Layer = layers[i];
 
-      if (isAssetLayer(layer)) {
-        const layerDecs: string[] = layer.name.split(`,`);
+      if (hasAsset(layer.name)) {
+        const statments: string[] = layer.name.split(`,`);
 
-        for (let i: number = 0; i < layerDecs.length; i++) {
-          const layerDec: string = layerDecs[i].trim();
+        for (let i: number = 0; i < statments.length; i++) {
+          let statement: string = statments[i].trim();
 
-          if (hasAsset(layerDec)) {
-            const definition: string = getArg(layerDec, `definition`);
-            const dimensions: string = getArg(layerDec, `dimensions`);
-            const extension: string = getArg(layerDec, `extension`);
-            const name: string = getArg(layerDec, `name`);
-            const quality: string = getArg(layerDec, `quality`);
-            let size: string = getArg(layerDec, `size`);
+          if (hasAsset(statement)) {
+            const asset: Asset = {};
 
-            const asset: Asset = { extension, name, size };
-
-            if (!!definition) {
-              asset.definition = definition;
+            if (hasArg(statement, `dimensions`)) {
+              asset.dimensions = getArg(statement, `dimensions`);
+              statement = statement.replace(argRegExps.dimensions, ``).trim();
             }
 
-            if (!!dimensions) {
-              asset.dimensions = dimensions;
+            if (hasArg(statement, `quality`)) {
+              asset.quality = getArg(statement, `quality`);
+              statement = statement.replace(argRegExps.quality, ``).trim();
             }
 
-            if (!!quality) {
-              asset.quality = quality;
+            asset.extension = getArg(statement, `extension`);
+            statement = statement.replace(argRegExps.extension, ``).trim();
+
+            if (hasArg(statement, `definition`)) {
+              asset.definition = getArg(statement, `definition`);
+              statement = statement
+                .replace(argRegExps.definition, ``)
+                .replace(/[\s\uFEFF\xA0\-_]+?$/i, ``);
             }
 
-            size = formatSize(size);
+            if (hasArg(statement, `size`)) {
+              asset.size = getArg(statement, `size`);
+              statement = statement
+                .replace(argRegExps.size, ``)
+                .replace(/[\s\uFEFF\xA0\-_]+?$/i, ``);
+            }
 
-            // @ts-ignore
-            if (!assets[size]) {
+            asset.name = statement;
+
+            // Needs attending to
+            if (!!asset.size) {
+              let formattedSize: string = asset.size;
+
+              formattedSize = formatSize(formattedSize);
+
               // @ts-ignore
-              assets[size] = [];
+              if (!assets[formattedSize]) {
+                // @ts-ignore
+                assets[formattedSize] = [asset];
+              } else {
+                // @ts-ignore
+                assets[formattedSize].push(asset);
+              }
             }
-
-            // @ts-ignore
-            assets[size].push(asset);
           }
         }
       }
 
-      if (isGroup(layer)) {
-        checkLayers(layer.layers, callback);
+      if (isLayerSet(layer)) {
+        scanLayers(layer.layers, cb);
       }
     }
 
-    layerDepth--;
+    scanDepth--;
 
-    if (layerDepth === 0) {
-      callback(assets);
+    if (!scanDepth) {
+      cb(assets);
     }
   };
 
   const assets: Assets = {};
-  let layerDepth: number = 0;
+  let scanDepth: number = 0;
 
-  checkLayers(app.activeDocument.layers, callback);
+  scanLayers(app.activeDocument.layers, cb);
 };
 
-const promptUser = (assets: Assets, callback: (data: any) => void): void => {};
-
-getAssets((assets) => {
-  promptUser(assets, () => {});
-
-  // const assetSizes: string[] = Object.keys(assets);
-
-  // for (let i: number = 0; i < assetSizes.length; i++) {
-  //   const assetSize: string = assetSizes[i];
-
-  //   alert(assetSize);
-  // }
-});
+getAssets((assets) => {});
