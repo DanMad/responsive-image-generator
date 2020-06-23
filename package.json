@@ -19,7 +19,7 @@
   "author": "DanMad",
   "main": "index.ts",
   "scripts": {
-    "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.jsx --extensions \".ts\" --ignore '**/*.test.ts'",
+    "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.jsx --extensions \".ts\"",
     "sort": "sort-package-json"
   },
   "husky": {
