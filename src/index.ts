@@ -208,4 +208,119 @@ const getAssets = (cb: (assets: Assets) => void): void => {
   scanLayers(app.activeDocument.layers, cb);
 };
 
-getAssets((assets) => {});
+const promptUser = (assets: Assets, cb: (data: any) => void): void => {
+  const handleCancel = (): void => {
+    dialog.close();
+  };
+  const handleSave = (): void => {
+    dialog.close();
+    cb(`foo`);
+  };
+
+  const dialog: Window = new Window(`dialog`, `Generate Responsive Image`);
+  dialog.margins = 16;
+
+  const infoPanel: Panel = dialog.add(
+    `panel`,
+    undefined,
+    // [0, 0, 304, 128],
+    `Image Information`
+  );
+  infoPanel.alignment = `fill`;
+  // infoPanel.margins = `0, 0, 40, 0`;
+  infoPanel.orientation = `column`;
+  infoPanel.spacing = 24;
+
+  const idGroup: Group = infoPanel.add(`group`);
+  idGroup.add(`statictext`, undefined, `Id:`);
+  idGroup.alignment = `right`;
+
+  const idInput: EditText = idGroup.add(
+    `edittext`,
+    undefined,
+    app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``)
+  );
+  idInput.active = true;
+  idInput.characters = 20;
+  idInput.helpTip = `Add the image's unique id`;
+
+  const relDirGroup: Group = infoPanel.add(`group`);
+  relDirGroup.add(`statictext`, undefined, `Directory:`);
+  relDirGroup.alignment = `right`;
+
+  const relDirInput: EditText = relDirGroup.add(`edittext`, undefined, `img/`);
+  relDirInput.characters = 20;
+  relDirInput.helpTip = `Add the image's relative directory`;
+
+  const altTxtGroup: Group = infoPanel.add(`group`);
+  altTxtGroup.add(`statictext`, undefined, `Alt Text:`);
+  altTxtGroup.alignment = `right`;
+
+  const altTxtInput: EditText = altTxtGroup.add(`edittext`);
+  altTxtInput.characters = 20;
+  altTxtInput.helpTip = `Add the image's alternative text`;
+
+  const breakpointPanel: Panel = dialog.add(
+    `panel`,
+    undefined,
+    // [0, 0, 304, 128],
+    `Image Breakpoints`
+  );
+
+  breakpointPanel.alignment = `fill`;
+
+  const sizes: string[] = Object.keys(assets);
+
+  for (let i: number = 0; i < sizes.length; i++) {
+    const size: string = sizes[i];
+    let formattedSize: string = size;
+
+    if (size === `xxs`) formattedSize = `Extra, extra small`;
+    if (size === `xs`) formattedSize = `Extra small`;
+    if (size === `s`) formattedSize = `Small`;
+    if (size === `m`) formattedSize = `Medium`;
+    if (size === `l`) formattedSize = `Large`;
+    if (size === `xl`) formattedSize = `Extra large`;
+    if (size === `xxl`) formattedSize = `Extra, extra large`;
+
+    const sizeGroup: Group = breakpointPanel.add(`group`);
+    sizeGroup.add(`statictext`, undefined, `${formattedSize}:`);
+    sizeGroup.alignment = `right`;
+
+    const sizeInput: EditText = sizeGroup.add(`edittext`);
+    sizeInput.characters = 20;
+    sizeInput.helpTip = `Add the ${formattedSize.toLowerCase()} breakpoint's size`;
+  }
+
+  const renameCheckbox: Checkbox = dialog.add(
+    'checkbox',
+    undefined,
+    'Compress asset arguments'
+  );
+  renameCheckbox.alignment = `fill`;
+  renameCheckbox.value = true;
+
+  const btnGroup: Group = dialog.add(`group`);
+  btnGroup.alignment = `right`;
+
+  const cancelBtn: Button = btnGroup.add(`button`, undefined, `Cancel`);
+  cancelBtn.onClick = handleCancel;
+
+  const saveBtn: Button = btnGroup.add(`button`, undefined, `Save`);
+  saveBtn.onClick = handleSave;
+
+  // // The following statement resolves a presentational issue in PhotoShop where
+  // // buttons are rendered inconsistently.
+  // // Source: https://community.adobe.com/t5/photoshop/why-do-buttons-in-two-panels-have-different-corners/td-p/9544453?page=1
+
+  // @ts-ignore
+  dialog.cancelElement = null;
+
+  dialog.show();
+};
+
+getAssets((assets) => {
+  promptUser(assets, (data) => {
+    alert(data);
+  });
+});
