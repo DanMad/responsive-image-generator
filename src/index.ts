@@ -1,11 +1,51 @@
 // Polyfills
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+declare interface Array<T> {
+  indexOf: (searchElement: any, fromIndex?: any) => number;
+}
 
-// Extends the Object object's interface to include support for Object.keys().
+// Extends the Array object's interface to include support for
+// Array.prototype.indexOf().
+if (!Array.prototype.indexOf) {
+  Array.prototype.indexOf = function (
+    searchElement: any,
+    fromIndex?: any
+  ): number {
+    let k: any;
+
+    if (this == null) {
+      // throw new TypeError('"this" is null or not defined');
+    }
+
+    const o: any = Object(this);
+    const len: number = o.length >>> 0;
+
+    if (len === 0) {
+      return -1;
+    }
+
+    const n: number = fromIndex | 0;
+
+    if (n >= len) {
+      return -1;
+    }
+
+    k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+    for (; k < len; k++) {
+      if (k in o && o[k] === searchElement) {
+        return k;
+      }
+    }
+    return -1;
+  };
+}
+
 declare interface Object {
   keys: (obj: any) => string[];
 }
 
+// Extends the Object object's interface to include support for Object.keys().
 if (!Object.keys) {
   Object.keys = (function (): (obj: any) => string[] {
     const dontEnums: string[] = [
@@ -53,12 +93,12 @@ if (!Object.keys) {
   })();
 }
 
-// Extends the String object's interface to include support for
-// String.prototype.trim().
 declare interface String {
   trim(): string;
 }
 
+// Extends the String object's interface to include support for
+// String.prototype.trim().
 if (!String.prototype.trim) {
   String.prototype.trim = function (): string {
     return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ``);
@@ -67,65 +107,85 @@ if (!String.prototype.trim) {
 
 // Configuration
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+interface Breakpoints {
+  [key: string]: number;
+}
 
-// ...
+const breakpoints: Breakpoints = {
+  l: 1280,
+  m: 768,
+  s: 480,
+  xl: 1920,
+  xs: 320,
+};
+
+const srcDir: string = `images/`;
 
 // Application
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-type Asset = {
-  [key in AssetArg]?: string;
-};
+interface Asset {
+  definition?: string;
+  dimensions?: string;
+  extension?: string;
+  name?: string;
+  quality?: string;
+  size?: string;
+}
 
-// Needs attending to
-type AssetArg =
-  | `definition`
-  | `dimensions`
-  | `extension`
-  | `name`
-  | `quality`
-  | `size`;
+type Assets = Asset[];
 
-type AssetArgRegExps = {
-  [key in AssetArg]: RegExp;
-};
+type Parameter = `definition` | `dimensions` | `extension` | `quality` | `size`;
 
-type Assets = {
-  [key in AssetSizeArg]?: Asset[];
-};
+// Investigate breaking down into more modular RegExps
+interface ArgumentPatterns {
+  definition: RegExp;
+  dimensions: RegExp;
+  extension: RegExp;
+  quality: RegExp;
+  size: RegExp;
+}
 
-type AssetSizeArg = `xxs` | `xs` | `s` | `m` | `l` | `xl` | `xxl`;
+interface Size {
+  assets: Assets;
+  maxWidth?: string;
+}
 
-const formatSize = (size: string): string => {
+interface Sizes {
+  [key: string]: Size;
+}
+
+const compressSize = (size: string): string => {
   return size
     .replace(/(e?x(tra)?-*)/gi, `x`)
-    .replace(/s(m(al)?l)?/i, `s`)
-    .replace(/m(ed(ium)?)?/i, `m`)
-    .replace(/l((ar)?ge)?/i, `l`);
+    .replace(/s(m(al)?l)?$/i, `s`)
+    .replace(/m(ed(ium)?)?$/i, `m`)
+    .replace(/l((ar)?ge)?$/i, `l`);
 };
 
-const getAssets = (cb: (assets: Assets) => void): void => {
-  const scanLayers = (layers: Layers, cb: (assets: Assets) => void): void => {
-    const getArg = (str: string, arg: AssetArg): string => {
-      return str.match(argRegExps[arg])![0];
-    };
-    const hasArg = (str: string, arg: AssetArg): boolean => {
-      return argRegExps[arg].test(str);
-    };
+const getAssetSizes = (cb: (sizes: Sizes) => void): void => {
+  const scanLayers = (layers: Layers, cb: (sizes: Sizes) => void): void => {
     const hasAsset = (str: string): boolean => {
-      return argRegExps.extension.test(str);
+      return argPatterns.extension.test(str);
     };
     const isLayerSet = (layer: Layer): layer is LayerSet => {
       return layer.typename === `LayerSet`;
     };
+    const setParam = (param: Parameter, str: string, obj: Asset): string => {
+      if (argPatterns[param].test(str)) {
+        obj[param] = str.match(argPatterns[param])![0];
+      }
 
-    // Needs attending to
-    const argRegExps: AssetArgRegExps = {
+      return str
+        .replace(argPatterns[param], ``)
+        .replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0\-_]+$/g, ``);
+    };
+
+    const argPatterns: ArgumentPatterns = {
       definition: /@?[1-9]x?$/i,
       dimensions: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)(?=\s)/i,
       extension: /\.(gif|jpe?g|png)/i,
-      name: /^.+$/i,
       quality: /(([1-9][0-9]?|100)%|10|[1-9])$/,
-      size: /(m(ed(ium)?)?|(e?x(tra)?-*){0,2}(s(m(al)?l)?|l((ar)?ge)?))$/i,
+      size: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
     };
 
     scanDepth++;
@@ -142,49 +202,28 @@ const getAssets = (cb: (assets: Assets) => void): void => {
           if (hasAsset(statement)) {
             const asset: Asset = {};
 
-            if (hasArg(statement, `dimensions`)) {
-              asset.dimensions = getArg(statement, `dimensions`);
-              statement = statement.replace(argRegExps.dimensions, ``).trim();
-            }
-
-            if (hasArg(statement, `quality`)) {
-              asset.quality = getArg(statement, `quality`);
-              statement = statement.replace(argRegExps.quality, ``).trim();
-            }
-
-            asset.extension = getArg(statement, `extension`);
-            statement = statement.replace(argRegExps.extension, ``).trim();
-
-            if (hasArg(statement, `definition`)) {
-              asset.definition = getArg(statement, `definition`);
-              statement = statement
-                .replace(argRegExps.definition, ``)
-                .replace(/[\s\uFEFF\xA0\-_]+?$/i, ``);
-            }
-
-            if (hasArg(statement, `size`)) {
-              asset.size = getArg(statement, `size`);
-              statement = statement
-                .replace(argRegExps.size, ``)
-                .replace(/[\s\uFEFF\xA0\-_]+?$/i, ``);
-            }
+            statement = setParam(`dimensions`, statement, asset);
+            statement = setParam(`quality`, statement, asset);
+            statement = setParam(`extension`, statement, asset);
+            statement = setParam(`definition`, statement, asset);
+            statement = setParam(`size`, statement, asset);
 
             asset.name = statement;
 
-            // Needs attending to
+            let size: string;
+
             if (!!asset.size) {
-              let formattedSize: string = asset.size;
+              size = compressSize(asset.size);
+            } else {
+              size = `default`;
+            }
 
-              formattedSize = formatSize(formattedSize);
-
-              // @ts-ignore
-              if (!assets[formattedSize]) {
-                // @ts-ignore
-                assets[formattedSize] = [asset];
-              } else {
-                // @ts-ignore
-                assets[formattedSize].push(asset);
-              }
+            if (!!sizes[size]) {
+              sizes[size].assets.push(asset);
+            } else {
+              sizes[size] = {
+                assets: [asset],
+              };
             }
           }
         }
@@ -198,110 +237,163 @@ const getAssets = (cb: (assets: Assets) => void): void => {
     scanDepth--;
 
     if (!scanDepth) {
-      cb(assets);
+      cb(sizes);
     }
   };
 
-  const assets: Assets = {};
+  const sizes: Sizes = {};
+
   let scanDepth: number = 0;
 
   scanLayers(app.activeDocument.layers, cb);
 };
 
-const promptUser = (assets: Assets, cb: (data: any) => void): void => {
+// const generateResponsiveImage = (resImg: ResponsiveImage): void =>  {
+// }
+
+interface ResponsiveImage {
+  altText: string;
+  compress: boolean;
+  prefix: string;
+  sizes: Sizes;
+  srcDir: string;
+}
+
+const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   const handleCancel = (): void => {
     dialog.close();
   };
   const handleSave = (): void => {
     dialog.close();
-    cb(`foo`);
+
+    for (let i: number = 0; i < foos.length; i++) {
+      let foo = foos[i];
+
+      let key = Object.keys(foo)[0];
+      let val = foo[key];
+
+      sizes[key].maxWidth = val.text;
+    }
+
+    const img: ResponsiveImage = {
+      altText: altTxtInput.text,
+      compress: compressCheckbox.value,
+      prefix: prefixInput.text,
+      sizes: sizes,
+      srcDir: srcDirInput.text,
+    };
+
+    cb(img);
+  };
+  const sortSizes = (sizes: string[], orderedSizes: string[]): string[] => {
+    const sortedSizes: string[] = [];
+
+    for (let i: number = 0; i < orderedSizes.length; i++) {
+      const orderedSize: string = orderedSizes[i];
+
+      if (sizes.indexOf(orderedSize) !== -1) {
+        sortedSizes.push(orderedSize);
+      }
+    }
+
+    return sortedSizes;
   };
 
+  let fileName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+
   const dialog: Window = new Window(`dialog`, `Generate Responsive Image`);
+
+  // The following statement resolves a presentational issue in PhotoShop where
+  // buttons are rendered inconsistently.
+  // @ts-ignore
+  dialog.cancelElement = null;
   dialog.margins = 16;
 
-  const infoPanel: Panel = dialog.add(
-    `panel`,
-    undefined,
-    // [0, 0, 304, 128],
-    `Image Information`
-  );
+  const infoPanel: Panel = dialog.add(`panel`, undefined, `Image Information`);
   infoPanel.alignment = `fill`;
-  // infoPanel.margins = `0, 0, 40, 0`;
-  infoPanel.orientation = `column`;
-  infoPanel.spacing = 24;
+  infoPanel.margins = 16;
+  infoPanel.spacing = 12;
 
-  const idGroup: Group = infoPanel.add(`group`);
-  idGroup.add(`statictext`, undefined, `Id:`);
-  idGroup.alignment = `right`;
+  const prefixGroup: Group = infoPanel.add(`group`);
+  prefixGroup.add(`statictext`, undefined, `Prefix:`);
+  prefixGroup.alignment = `right`;
+  prefixGroup.spacing = 0;
 
-  const idInput: EditText = idGroup.add(
+  const prefixInput: EditText = prefixGroup.add(
     `edittext`,
     undefined,
-    app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``)
+    fileName
   );
-  idInput.active = true;
-  idInput.characters = 20;
-  idInput.helpTip = `Add the image's unique id`;
+  prefixInput.active = true;
+  prefixInput.characters = 16;
+  prefixInput.helpTip = `Add the image's unique id`;
 
-  const relDirGroup: Group = infoPanel.add(`group`);
-  relDirGroup.add(`statictext`, undefined, `Directory:`);
-  relDirGroup.alignment = `right`;
+  const srcDirGroup: Group = infoPanel.add(`group`);
+  srcDirGroup.add(`statictext`, undefined, `Directory:`);
+  srcDirGroup.alignment = `right`;
+  srcDirGroup.spacing = 0;
 
-  const relDirInput: EditText = relDirGroup.add(`edittext`, undefined, `img/`);
-  relDirInput.characters = 20;
-  relDirInput.helpTip = `Add the image's relative directory`;
+  const srcDirInput: EditText = srcDirGroup.add(`edittext`, undefined, srcDir);
+  srcDirInput.characters = 16;
+  srcDirInput.helpTip = `Add the image's relative directory`;
 
   const altTxtGroup: Group = infoPanel.add(`group`);
   altTxtGroup.add(`statictext`, undefined, `Alt Text:`);
   altTxtGroup.alignment = `right`;
+  altTxtGroup.spacing = 0;
 
   const altTxtInput: EditText = altTxtGroup.add(`edittext`);
-  altTxtInput.characters = 20;
+  altTxtInput.characters = 16;
   altTxtInput.helpTip = `Add the image's alternative text`;
 
-  const breakpointPanel: Panel = dialog.add(
-    `panel`,
-    undefined,
-    // [0, 0, 304, 128],
-    `Image Breakpoints`
-  );
+  const sizeOrder: string[] = [`xs`, `s`, `m`, `l`, `xl`, `default`];
+  const sizeKeys: string[] = Object.keys(sizes);
+  const sortedSizes: string[] = sortSizes(sizeKeys, sizeOrder);
+  const foos: any[] = [];
 
-  breakpointPanel.alignment = `fill`;
+  if (!!sortedSizes.length) {
+    const sizePanel: Panel = dialog.add(
+      `panel`,
+      undefined,
+      `Image Breakpoints`
+    );
+    sizePanel.alignment = `fill`;
+    sizePanel.margins = 16;
+    sizePanel.spacing = 12;
 
-  const sizes: string[] = Object.keys(assets);
+    for (let i: number = 0; i < sortedSizes.length; i++) {
+      const sortedSize: string = sortedSizes[i];
 
-  for (let i: number = 0; i < sizes.length; i++) {
-    const size: string = sizes[i];
-    let formattedSize: string = size;
+      const sizeGroup: Group = sizePanel.add(`group`);
+      sizeGroup.add(`statictext`, undefined, `${sortedSize.toUpperCase()}:`);
+      sizeGroup.alignment = `right`;
+      sizeGroup.spacing = 0;
 
-    if (size === `xxs`) formattedSize = `Extra, extra small`;
-    if (size === `xs`) formattedSize = `Extra small`;
-    if (size === `s`) formattedSize = `Small`;
-    if (size === `m`) formattedSize = `Medium`;
-    if (size === `l`) formattedSize = `Large`;
-    if (size === `xl`) formattedSize = `Extra large`;
-    if (size === `xxl`) formattedSize = `Extra, extra large`;
+      const sizeInput: EditText = sizeGroup.add(`edittext`);
+      sizeInput.characters = 16;
+      sizeInput.text = `${breakpoints[sortedSize]}px`;
+      sizeInput.helpTip = `Add the breakpoint's max-width`;
 
-    const sizeGroup: Group = breakpointPanel.add(`group`);
-    sizeGroup.add(`statictext`, undefined, `${formattedSize}:`);
-    sizeGroup.alignment = `right`;
+      let bar = {};
 
-    const sizeInput: EditText = sizeGroup.add(`edittext`);
-    sizeInput.characters = 20;
-    sizeInput.helpTip = `Add the ${formattedSize.toLowerCase()} breakpoint's size`;
+      // @ts-ignore
+      bar[sortedSize] = sizeInput;
+
+      foos.push(bar);
+    }
   }
 
-  const renameCheckbox: Checkbox = dialog.add(
+  const compressCheckbox: Checkbox = dialog.add(
     'checkbox',
     undefined,
     'Compress asset arguments'
   );
-  renameCheckbox.alignment = `fill`;
-  renameCheckbox.value = true;
+  compressCheckbox.alignment = `fill`;
+  compressCheckbox.value = true;
 
   const btnGroup: Group = dialog.add(`group`);
   btnGroup.alignment = `right`;
+  btnGroup.spacing = 8;
 
   const cancelBtn: Button = btnGroup.add(`button`, undefined, `Cancel`);
   cancelBtn.onClick = handleCancel;
@@ -309,18 +401,11 @@ const promptUser = (assets: Assets, cb: (data: any) => void): void => {
   const saveBtn: Button = btnGroup.add(`button`, undefined, `Save`);
   saveBtn.onClick = handleSave;
 
-  // // The following statement resolves a presentational issue in PhotoShop where
-  // // buttons are rendered inconsistently.
-  // // Source: https://community.adobe.com/t5/photoshop/why-do-buttons-in-two-panels-have-different-corners/td-p/9544453?page=1
-
-  // @ts-ignore
-  dialog.cancelElement = null;
-
   dialog.show();
 };
 
-getAssets((assets) => {
-  promptUser(assets, (data) => {
-    alert(data);
+getAssetSizes((sizes) => {
+  promptUser(sizes, (img) => {
+    //     generateResponsiveImage(img);
   });
 });
