@@ -248,8 +248,11 @@ const getAssetSizes = (cb: (sizes: Sizes) => void): void => {
   scanLayers(app.activeDocument.layers, cb);
 };
 
-// const generateResponsiveImage = (resImg: ResponsiveImage): void =>  {
-// }
+const generateResponsiveImage = (img: ResponsiveImage): void => {};
+
+interface EditTextRef {
+  [key: string]: EditText;
+}
 
 interface ResponsiveImage {
   altText: string;
@@ -266,15 +269,6 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   const handleSave = (): void => {
     dialog.close();
 
-    for (let i: number = 0; i < foos.length; i++) {
-      let foo = foos[i];
-
-      let key = Object.keys(foo)[0];
-      let val = foo[key];
-
-      sizes[key].maxWidth = val.text;
-    }
-
     const img: ResponsiveImage = {
       altText: altTxtInput.text,
       compress: compressCheckbox.value,
@@ -282,6 +276,14 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
       sizes: sizes,
       srcDir: srcDirInput.text,
     };
+
+    for (let i: number = 0; i < sizeInputRefs.length; i++) {
+      const sizeInputRef: EditTextRef = sizeInputRefs[i];
+      const id: string = Object.keys(sizeInputRef)[0];
+      const input: EditText = sizeInputRef[id];
+
+      img.sizes[id].maxWidth = input.text;
+    }
 
     cb(img);
   };
@@ -299,7 +301,10 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
     return sortedSizes;
   };
 
-  let fileName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+  const sizeInputRefs: EditTextRef[] = [];
+  const sizeOrder: string[] = [`xs`, `s`, `m`, `l`, `xl`, `default`];
+  const sortedSizes: string[] = sortSizes(Object.keys(sizes), sizeOrder);
 
   const dialog: Window = new Window(`dialog`, `Generate Responsive Image`);
 
@@ -319,11 +324,7 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   prefixGroup.alignment = `right`;
   prefixGroup.spacing = 0;
 
-  const prefixInput: EditText = prefixGroup.add(
-    `edittext`,
-    undefined,
-    fileName
-  );
+  const prefixInput: EditText = prefixGroup.add(`edittext`, undefined, docName);
   prefixInput.active = true;
   prefixInput.characters = 16;
   prefixInput.helpTip = `Add the image's unique id`;
@@ -345,11 +346,6 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   const altTxtInput: EditText = altTxtGroup.add(`edittext`);
   altTxtInput.characters = 16;
   altTxtInput.helpTip = `Add the image's alternative text`;
-
-  const sizeOrder: string[] = [`xs`, `s`, `m`, `l`, `xl`, `default`];
-  const sizeKeys: string[] = Object.keys(sizes);
-  const sortedSizes: string[] = sortSizes(sizeKeys, sizeOrder);
-  const foos: any[] = [];
 
   if (!!sortedSizes.length) {
     const sizePanel: Panel = dialog.add(
@@ -374,12 +370,9 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
       sizeInput.text = `${breakpoints[sortedSize]}px`;
       sizeInput.helpTip = `Add the breakpoint's max-width`;
 
-      let bar = {};
-
-      // @ts-ignore
-      bar[sortedSize] = sizeInput;
-
-      foos.push(bar);
+      let sizeInputRef: EditTextRef = {};
+      sizeInputRef[sortedSize] = sizeInput;
+      sizeInputRefs.push(sizeInputRef);
     }
   }
 
@@ -406,6 +399,6 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
 
 getAssetSizes((sizes) => {
   promptUser(sizes, (img) => {
-    //     generateResponsiveImage(img);
+    generateResponsiveImage(img);
   });
 });
