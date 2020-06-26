@@ -321,9 +321,7 @@ const generateResponsiveImage = (img: ResponsiveImage): void => {
   const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
   const docPath: Folder = app.activeDocument.path;
 
-  const file: File = File(
-    `${docPath}/${!!img.name ? img.name : docName}-assets/responsive-image.html`
-  );
+  const file: File = File(`${docPath}/${docName}-assets/responsive-image.html`);
   const sortedSizes: string[] = img.sortedSizes;
 
   for (let i: number = 0; i < sortedSizes.length; i++) {
