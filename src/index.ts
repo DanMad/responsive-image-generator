@@ -154,16 +154,15 @@ interface Sizes {
   [key: string]: Size;
 }
 
-const compressSize = (size: string): string => {
-  return size
-    .replace(/(e?x(tra)?-*)/gi, `x`)
-    .replace(/s(m(al)?l)?$/i, `s`)
-    .replace(/m(ed(ium)?)?$/i, `m`)
-    .replace(/l((ar)?ge)?$/i, `l`);
-};
-
 const getAssetSizes = (cb: (sizes: Sizes) => void): void => {
   const scanLayers = (layers: Layers, cb: (sizes: Sizes) => void): void => {
+    const compressSize = (size: string): string => {
+      return size
+        .replace(/(e?x(tra)?-*)/gi, `x`)
+        .replace(/s(m(al)?l)?$/i, `s`)
+        .replace(/m(ed(ium)?)?$/i, `m`)
+        .replace(/l((ar)?ge)?$/i, `l`);
+    };
     const hasAsset = (str: string): boolean => {
       return argPatterns.extension.test(str);
     };
@@ -215,7 +214,7 @@ const getAssetSizes = (cb: (sizes: Sizes) => void): void => {
             if (!!asset.size) {
               size = compressSize(asset.size);
             } else {
-              size = `default`;
+              size = `unset`;
             }
 
             if (!!sizes[size]) {
@@ -248,7 +247,205 @@ const getAssetSizes = (cb: (sizes: Sizes) => void): void => {
   scanLayers(app.activeDocument.layers, cb);
 };
 
-const generateResponsiveImage = (img: ResponsiveImage): void => {};
+const generateResponsiveImage = (img: ResponsiveImage): void => {
+  const compressArg = (param: Parameter, obj: Asset): void => {
+    if (!!obj[param]) {
+      let compressedArg: string = obj[param]!.toLowerCase();
+
+      switch (param) {
+        case `definition`:
+          compressedArg = `${compressedArg.match(/[1-9]/)![0]}x`;
+
+          break;
+
+        case `dimensions`:
+          compressedArg = compressedArg
+            .replace(`px`, ``)
+            .replace(/\s*?x\s*/i, ``);
+
+          break;
+
+        case `extension`:
+          compressedArg = compressedArg.replace(`jpeg`, `jpg`);
+
+          break;
+
+        case `quality`:
+          compressedArg = compressedArg.replace(/0{1,2}%$/, ``);
+
+          break;
+
+        default:
+          compressedArg = compressedArg
+            .replace(/(e?x(tra)?-*)/gi, `x`)
+            .replace(/s(m(al)?l)?$/i, `s`)
+            .replace(/m(ed(ium)?)?$/i, `m`)
+            .replace(/l((ar)?ge)?$/i, `l`);
+
+          break;
+      }
+
+      obj[param] = compressedArg;
+    }
+  };
+  const sortAssets = (assets: Assets): void => {
+    const definitionAscend = (a: Asset, b: Asset): number => {
+      let aNum: number;
+      let bNum: number;
+
+      if (!!a.definition) {
+        aNum = Number(a.definition?.match(/\d/)![0]);
+      } else {
+        aNum = 1;
+      }
+
+      if (!!b.definition) {
+        bNum = Number(b.definition?.match(/\d/)![0]);
+      } else {
+        bNum = 1;
+      }
+
+      return aNum - bNum;
+    };
+
+    assets.sort(definitionAscend);
+  };
+  const toKebabCase = (str: string): string => {
+    return str
+      .replace(/([A-Z])([A-Z])/g, `$1-$2`)
+      .replace(/([a-z])([A-Z])/g, `$1-$2`)
+      .replace(/[\s_]+/g, `-`)
+      .toLowerCase();
+  };
+
+  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+  const docPath: Folder = app.activeDocument.path;
+
+  const file: File = File(
+    `${docPath}/${!!img.name ? img.name : docName}-assets/responsive-image.html`
+  );
+  const sortedSizes: string[] = img.sortedSizes;
+
+  for (let i: number = 0; i < sortedSizes.length; i++) {
+    const sortedSize: string = sortedSizes[i];
+    const assets: Assets = img.sizes[sortedSize].assets;
+
+    sortAssets(assets);
+
+    if (img.compress) {
+      for (let i: number = 0; i < assets.length; i++) {
+        const asset: Asset = assets[i];
+
+        compressArg(`definition`, asset);
+        compressArg(`dimensions`, asset);
+        compressArg(`extension`, asset);
+        compressArg(`quality`, asset);
+        compressArg(`size`, asset);
+      }
+    }
+  }
+
+  if (file.exists) {
+    file.remove();
+  }
+
+  file.encoding = 'utf-8';
+  file.open('w');
+
+  if (img.sortedSizes.length > 1) {
+    file.writeln(`<picture>`);
+  }
+
+  for (let i: number = img.sortedSizes.length; i > 0; i--) {
+    const sortedSize: string = img.sortedSizes[i - 1];
+
+    if (i !== 1) {
+      file.writeln(`  <source`);
+      file.writeln(
+        `    media="(min-width: ${
+          (breakpoints[img.sortedSizes[i - 2]] + 1) / 16
+        }em)"`
+      );
+      file.writeln(`    srcset="`);
+
+      for (let i: number = 0; i < img.sizes[sortedSize].assets.length; i++) {
+        const asset: Asset = img.sizes[sortedSize].assets[i];
+        let srcDec: string = `${img.srcDir}${toKebabCase(img.name)}`;
+
+        if (!!asset.size) {
+          srcDec += `-${asset.size}`;
+        }
+        if (!!asset.definition) {
+          srcDec += `-${asset.definition}`;
+        }
+        if (!!asset.extension) {
+          srcDec += `${asset.extension}`;
+        }
+
+        if (!!asset.definition) {
+          srcDec += ` ${asset.definition?.match(/\d/)![0]}x`;
+        }
+
+        if (i === img.sizes[sortedSize].assets.length - 1) {
+          file.writeln(`      ${srcDec}`);
+        } else {
+          file.writeln(`      ${srcDec},`);
+        }
+      }
+
+      file.writeln(`    "`);
+      file.writeln(`  />`);
+    } else {
+      file.writeln(`  <img`);
+
+      if (!!img.altText) {
+        file.writeln(`    alt="${img.altText}"`);
+      }
+
+      for (let i: number = 0; i < img.sizes[sortedSize].assets.length; i++) {
+        const asset: Asset = img.sizes[sortedSize].assets[i];
+        let srcDec: string = `${img.srcDir}${toKebabCase(img.name)}`;
+
+        if (!!asset.size) {
+          srcDec += `-${asset.size}`;
+        }
+        if (!!asset.definition) {
+          srcDec += `-${asset.definition}`;
+        }
+        if (!!asset.extension) {
+          srcDec += `${asset.extension}`;
+        }
+
+        if (!!asset.definition) {
+          srcDec += ` ${asset.definition?.match(/\d/)![0]}x`;
+        }
+
+        if (i === 0) {
+          file.writeln(`    src="${srcDec}"`);
+
+          if (img.sizes[sortedSize].assets.length > 1) {
+            file.writeln(`    srcset="`);
+          }
+        } else {
+          if (i === img.sizes[sortedSize].assets.length - 1) {
+            file.writeln(`      ${srcDec}`);
+            file.writeln(`    "`);
+          } else {
+            file.writeln(`      ${srcDec},`);
+          }
+        }
+      }
+
+      file.writeln(`  />`);
+    }
+  }
+
+  if (img.sortedSizes.length > 1) {
+    file.writeln(`</picture>`);
+  }
+
+  file.close();
+};
 
 interface EditTextRef {
   [key: string]: EditText;
@@ -257,8 +454,9 @@ interface EditTextRef {
 interface ResponsiveImage {
   altText: string;
   compress: boolean;
-  prefix: string;
+  name: string;
   sizes: Sizes;
+  sortedSizes: string[];
   srcDir: string;
 }
 
@@ -267,15 +465,16 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
     dialog.close();
   };
   const handleSave = (): void => {
-    dialog.close();
-
     const img: ResponsiveImage = {
       altText: altTxtInput.text,
       compress: compressCheckbox.value,
-      prefix: prefixInput.text,
-      sizes: sizes,
+      name: nameInput.text,
+      sizes,
+      sortedSizes,
       srcDir: srcDirInput.text,
     };
+
+    dialog.close();
 
     for (let i: number = 0; i < sizeInputRefs.length; i++) {
       const sizeInputRef: EditTextRef = sizeInputRefs[i];
@@ -303,7 +502,7 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
 
   const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
   const sizeInputRefs: EditTextRef[] = [];
-  const sizeOrder: string[] = [`xs`, `s`, `m`, `l`, `xl`, `default`];
+  const sizeOrder: string[] = [`xs`, `s`, `m`, `l`, `xl`, `unset`];
   const sortedSizes: string[] = sortSizes(Object.keys(sizes), sizeOrder);
 
   const dialog: Window = new Window(`dialog`, `Generate Responsive Image`);
@@ -319,15 +518,15 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   infoPanel.margins = 16;
   infoPanel.spacing = 12;
 
-  const prefixGroup: Group = infoPanel.add(`group`);
-  prefixGroup.add(`statictext`, undefined, `Prefix:`);
-  prefixGroup.alignment = `right`;
-  prefixGroup.spacing = 0;
+  const nameGroup: Group = infoPanel.add(`group`);
+  nameGroup.add(`statictext`, undefined, `Name:`);
+  nameGroup.alignment = `right`;
+  nameGroup.spacing = 0;
 
-  const prefixInput: EditText = prefixGroup.add(`edittext`, undefined, docName);
-  prefixInput.active = true;
-  prefixInput.characters = 16;
-  prefixInput.helpTip = `Add the image's unique id`;
+  const nameInput: EditText = nameGroup.add(`edittext`, undefined, docName);
+  nameInput.active = true;
+  nameInput.characters = 16;
+  nameInput.helpTip = `Add the image's name`;
 
   const srcDirGroup: Group = infoPanel.add(`group`);
   srcDirGroup.add(`statictext`, undefined, `Directory:`);
@@ -336,7 +535,7 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
 
   const srcDirInput: EditText = srcDirGroup.add(`edittext`, undefined, srcDir);
   srcDirInput.characters = 16;
-  srcDirInput.helpTip = `Add the image's relative directory`;
+  srcDirInput.helpTip = `Add the image's source directory`;
 
   const altTxtGroup: Group = infoPanel.add(`group`);
   altTxtGroup.add(`statictext`, undefined, `Alt Text:`);
