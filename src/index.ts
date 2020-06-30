@@ -7,14 +7,11 @@ declare interface Array<T> {
 // Extends the Array object's interface to include support for
 // Array.prototype.indexOf().
 if (!Array.prototype.indexOf) {
-  Array.prototype.indexOf = function (
-    searchElement: any,
-    fromIndex?: any
-  ): number {
+  Array.prototype.indexOf = function (searchElement: any, fromIndex?: any): number {
     let k: any;
 
     if (this == null) {
-      // throw new TypeError('"this" is null or not defined');
+      alert(`Error: Array.prototype.indexOf()\n"this" is null or undefined.`);
     }
 
     const o: any = Object(this);
@@ -57,19 +54,12 @@ if (!Object.keys) {
       `propertyIsEnumerable`,
       `constructor`,
     ];
-    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(
-      `toString`
-    );
-    const hasOwnProperty: (name: string) => boolean =
-      Object.prototype.hasOwnProperty;
+    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(`toString`);
+    const hasOwnProperty: (name: string) => boolean = Object.prototype.hasOwnProperty;
 
     return function (obj: any): string[] {
-      if (
-        typeof obj !== `function` &&
-        (typeof obj !== `object` || obj === null)
-      ) {
-        // ! Determine appropriate error handling solution
-        // throw new TypeError('Object.keys called on non-object');
+      if (typeof obj !== `function` && (typeof obj !== `object` || obj === null)) {
+        alert(`Error: Object.keys()\nCalled on a non-object.`);
       }
 
       const result: string[] = [];
@@ -108,207 +98,131 @@ if (!String.prototype.trim) {
 // Configuration
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 interface Breakpoints {
-  [key: string]: number;
+  l: string;
+  m: string;
+  s: string;
+  xl: string;
+  xs: string;
 }
 
 const breakpoints: Breakpoints = {
-  l: 1280,
-  m: 768,
-  s: 480,
-  xl: 1920,
-  xs: 320,
+  l: `1280px`,
+  m: `768px`,
+  s: `480px`,
+  xl: `1920px`,
+  xs: `320`,
 };
 
 const srcDir: string = `images/`;
 
 // Application
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-interface Asset {
-  definition?: string;
-  dimensions?: string;
-  extension?: string;
-  name?: string;
-  quality?: string;
-  size?: string;
-}
+const generateImg = (img: Image): void => {
+  const compressArg = (prop: AssetParam, obj: AssetArgs): void => {
+    if (!!obj[prop]) {
+      let compressedArg: string = obj[prop]!.toLowerCase();
 
-type Assets = Asset[];
-
-type Parameter = `definition` | `dimensions` | `extension` | `quality` | `size`;
-
-// Investigate breaking down into more modular RegExps
-interface ArgumentPatterns {
-  definition: RegExp;
-  dimensions: RegExp;
-  extension: RegExp;
-  quality: RegExp;
-  size: RegExp;
-}
-
-interface Size {
-  assets: Assets;
-  maxWidth?: string;
-}
-
-interface Sizes {
-  [key: string]: Size;
-}
-
-const getAssetSizes = (cb: (sizes: Sizes) => void): void => {
-  const scanLayers = (layers: Layers, cb: (sizes: Sizes) => void): void => {
-    const compressSize = (size: string): string => {
-      return size
-        .replace(/(e?x(tra)?-*)/gi, `x`)
-        .replace(/s(m(al)?l)?$/i, `s`)
-        .replace(/m(ed(ium)?)?$/i, `m`)
-        .replace(/l((ar)?ge)?$/i, `l`);
-    };
-    const hasAsset = (str: string): boolean => {
-      return argPatterns.extension.test(str);
-    };
-    const isLayerSet = (layer: Layer): layer is LayerSet => {
-      return layer.typename === `LayerSet`;
-    };
-    const setParam = (param: Parameter, str: string, obj: Asset): string => {
-      if (argPatterns[param].test(str)) {
-        obj[param] = str.match(argPatterns[param])![0];
+      if (prop === `context`) {
+        compressedArg = compressedArg
+          .replace(/^e?x(tra)?-*/i, `x`)
+          .replace(/l((ar)?ge)?$/i, `l`)
+          .replace(/^m(ed(ium)?)?$/i, `m`)
+          .replace(/s(m(al)?l)?$/i, `s`);
+      } else if (prop === `def`) {
+        compressedArg = `${compressedArg.match(/[1-9]/)![0]}x`;
+      } else if (prop === `ext`) {
+        compressedArg = compressedArg.replace(`jpeg`, `jpg`);
+      } else if (prop === `qual`) {
+        compressedArg = compressedArg.replace(/0{1,2}%$/, ``);
+      } else if (prop === `size`) {
+        compressedArg = compressedArg.replace(`px`, ``).replace(/\s*?x\s*/i, `x`);
       }
 
-      return str
-        .replace(argPatterns[param], ``)
-        .replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0\-_]+$/g, ``);
-    };
+      obj[prop] = compressedArg;
+    }
+  };
+  const getAssetSrc = (asset: Asset): string => {
+    let src: string = `/${trimDir(img.srcDir)}/`;
 
-    const argPatterns: ArgumentPatterns = {
-      definition: /@?[1-9]x?$/i,
-      dimensions: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)(?=\s)/i,
-      extension: /\.(gif|jpe?g|png)/i,
-      quality: /(([1-9][0-9]?|100)%|10|[1-9])$/,
-      size: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
-    };
+    if (!!img.name) {
+      src += toKebabCase(img.name);
+    } else {
+      src += asset.args.name;
+    }
 
-    scanDepth++;
+    if (!!asset.args.context) {
+      src += `-${asset.args.context}`;
+    }
 
-    for (let i: number = 0; i < layers.length; i++) {
-      const layer: Layer = layers[i];
+    if (!!asset.args.def) {
+      src += `-${asset.args.def}`;
+    }
 
-      if (hasAsset(layer.name)) {
-        const statments: string[] = layer.name.split(`,`);
+    src += asset.args.ext;
 
-        for (let i: number = 0; i < statments.length; i++) {
-          let statement: string = statments[i].trim();
+    if (!!asset.args.context && asset.index > 1) {
+      src += ` ${asset.index}x`;
+    }
 
-          if (hasAsset(statement)) {
-            const asset: Asset = {};
+    return src;
+  };
+  const getAssetStatement = (asset: Asset): string => {
+    let statement: string = ``;
 
-            statement = setParam(`dimensions`, statement, asset);
-            statement = setParam(`quality`, statement, asset);
-            statement = setParam(`extension`, statement, asset);
-            statement = setParam(`definition`, statement, asset);
-            statement = setParam(`size`, statement, asset);
+    if (asset.args.size) {
+      statement += `${asset.args.size} `;
+    }
 
-            asset.name = statement;
+    if (!!img.name) {
+      statement += toKebabCase(img.name);
+    } else {
+      statement += asset.args.name;
+    }
 
-            let size: string;
+    if (!!asset.args.context) {
+      statement += `-${asset.args.context}`;
+    }
 
-            if (!!asset.size) {
-              size = compressSize(asset.size);
-            } else {
-              size = `unset`;
-            }
+    if (!!asset.args.def) {
+      statement += `-${asset.args.def}`;
+    }
 
-            if (!!sizes[size]) {
-              sizes[size].assets.push(asset);
-            } else {
-              sizes[size] = {
-                assets: [asset],
-              };
-            }
-          }
+    statement += asset.args.ext;
+
+    if (!!asset.args.qual) {
+      statement += `${asset.args.qual}`;
+    }
+
+    return statement;
+  };
+  const getLayerStatements = (layerId: number): string[] => {
+    const layerStatements: string[] = [];
+
+    for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
+      const sortedContext: TShirtSize = sortedContexts[i];
+      const contextAssets: Assets = img.contexts[sortedContext]!.assets;
+      for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
+        const contextAsset: Asset = contextAssets[i];
+
+        if (contextAsset.layerId === layerId) {
+          const statement: string = getAssetStatement(contextAsset);
+
+          layerStatements.push(statement);
         }
       }
-
-      if (isLayerSet(layer)) {
-        scanLayers(layer.layers, cb);
-      }
     }
 
-    scanDepth--;
-
-    if (!scanDepth) {
-      cb(sizes);
-    }
+    return layerStatements;
   };
-
-  const sizes: Sizes = {};
-
-  let scanDepth: number = 0;
-
-  scanLayers(app.activeDocument.layers, cb);
-};
-
-const generateResponsiveImage = (img: ResponsiveImage): void => {
-  const compressArg = (param: Parameter, obj: Asset): void => {
-    if (!!obj[param]) {
-      let compressedArg: string = obj[param]!.toLowerCase();
-
-      switch (param) {
-        case `definition`:
-          compressedArg = `${compressedArg.match(/[1-9]/)![0]}x`;
-
-          break;
-
-        case `dimensions`:
-          compressedArg = compressedArg
-            .replace(`px`, ``)
-            .replace(/\s*?x\s*/i, ``);
-
-          break;
-
-        case `extension`:
-          compressedArg = compressedArg.replace(`jpeg`, `jpg`);
-
-          break;
-
-        case `quality`:
-          compressedArg = compressedArg.replace(/0{1,2}%$/, ``);
-
-          break;
-
-        default:
-          compressedArg = compressedArg
-            .replace(/(e?x(tra)?-*)/gi, `x`)
-            .replace(/s(m(al)?l)?$/i, `s`)
-            .replace(/m(ed(ium)?)?$/i, `m`)
-            .replace(/l((ar)?ge)?$/i, `l`);
-
-          break;
-      }
-
-      obj[param] = compressedArg;
-    }
+  const hasAlt = (alt: string): boolean => {
+    return !!alt;
   };
   const sortAssets = (assets: Assets): void => {
-    const definitionAscend = (a: Asset, b: Asset): number => {
-      let aNum: number;
-      let bNum: number;
-
-      if (!!a.definition) {
-        aNum = Number(a.definition?.match(/\d/)![0]);
-      } else {
-        aNum = 1;
-      }
-
-      if (!!b.definition) {
-        bNum = Number(b.definition?.match(/\d/)![0]);
-      } else {
-        bNum = 1;
-      }
-
-      return aNum - bNum;
+    const defAscend = (a: Asset, b: Asset): number => {
+      return a.index - b.index;
     };
 
-    assets.sort(definitionAscend);
+    assets.sort(defAscend);
   };
   const toKebabCase = (str: string): string => {
     return str
@@ -317,31 +231,38 @@ const generateResponsiveImage = (img: ResponsiveImage): void => {
       .replace(/[\s_]+/g, `-`)
       .toLowerCase();
   };
+  const trimDir = (dir: string): string => {
+    let trimmedDir: string = dir;
 
-  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
-  const docPath: Folder = app.activeDocument.path;
+    trimmedDir = trimmedDir.replace(/\/{2,}/g, `/`);
+    trimmedDir = trimmedDir.replace(/(^\/*|\/*$)/g, ``);
 
-  const file: File = File(`${docPath}/${docName}-assets/responsive-image.html`);
-  const sortedSizes: string[] = img.sortedSizes;
+    return trimmedDir;
+  };
 
-  for (let i: number = 0; i < sortedSizes.length; i++) {
-    const sortedSize: string = sortedSizes[i];
-    const assets: Assets = img.sizes[sortedSize].assets;
+  const sortedContexts: TShirtSizes = sortContexts(Object.keys(img.contexts));
+
+  for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
+    const assets: Assets = img.contexts[sortedContexts[i]]!.assets;
 
     sortAssets(assets);
 
     if (img.compress) {
-      for (let i: number = 0; i < assets.length; i++) {
-        const asset: Asset = assets[i];
+      for (let i: number = 0, len: number = assets.length; i < len; i++) {
+        const args: AssetArgs = assets[i].args;
 
-        compressArg(`definition`, asset);
-        compressArg(`dimensions`, asset);
-        compressArg(`extension`, asset);
-        compressArg(`quality`, asset);
-        compressArg(`size`, asset);
+        compressArg(`context`, args);
+        compressArg(`def`, args);
+        compressArg(`ext`, args);
+        compressArg(`qual`, args);
+        compressArg(`size`, args);
       }
     }
   }
+
+  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+  const docPath: Folder = app.activeDocument.path;
+  const file: File = File(`${docPath}/${docName}-assets/responsive-image.html`);
 
   if (file.exists) {
     file.remove();
@@ -350,161 +271,406 @@ const generateResponsiveImage = (img: ResponsiveImage): void => {
   file.encoding = 'utf-8';
   file.open('w');
 
-  if (img.sortedSizes.length > 1) {
+  const tab: string = `  `;
+
+  if (hasMultipleContexts(sortedContexts)) {
     file.writeln(`<picture>`);
-  }
 
-  for (let i: number = img.sortedSizes.length; i > 0; i--) {
-    const sortedSize: string = img.sortedSizes[i - 1];
+    for (let i: number = sortedContexts.length; i > 0; i--) {
+      const sortedContext: TShirtSize = sortedContexts[i - 1];
+      const assets: Assets = img.contexts[sortedContext]!.assets;
 
-    if (i !== 1) {
-      file.writeln(`  <source`);
-      file.writeln(
-        `    media="(min-width: ${
-          (breakpoints[img.sortedSizes[i - 2]] + 1) / 16
-        }em)"`
-      );
-      file.writeln(`    srcset="`);
+      if (i === 1) {
+        file.writeln(`${tab}<img`);
 
-      for (let i: number = 0; i < img.sizes[sortedSize].assets.length; i++) {
-        const asset: Asset = img.sizes[sortedSize].assets[i];
-        let srcDec: string = `${img.srcDir}${toKebabCase(img.name)}`;
-
-        if (!!asset.size) {
-          srcDec += `-${asset.size}`;
-        }
-        if (!!asset.definition) {
-          srcDec += `-${asset.definition}`;
-        }
-        if (!!asset.extension) {
-          srcDec += `${asset.extension}`;
+        if (hasAlt(img.alt)) {
+          file.writeln(`${tab}${tab}alt="${img.alt}"`);
         }
 
-        if (!!asset.definition) {
-          srcDec += ` ${asset.definition?.match(/\d/)![0]}x`;
-        }
+        for (let i: number = 0, len: number = assets.length; i < len; i++) {
+          const asset: Asset = assets[i];
 
-        if (i === img.sizes[sortedSize].assets.length - 1) {
-          file.writeln(`      ${srcDec}`);
-        } else {
-          file.writeln(`      ${srcDec},`);
-        }
-      }
+          if (i === 0) {
+            file.writeln(`${tab}${tab}src="${getAssetSrc(asset)}"`);
 
-      file.writeln(`    "`);
-      file.writeln(`  />`);
-    } else {
-      file.writeln(`  <img`);
-
-      if (!!img.altText) {
-        file.writeln(`    alt="${img.altText}"`);
-      }
-
-      for (let i: number = 0; i < img.sizes[sortedSize].assets.length; i++) {
-        const asset: Asset = img.sizes[sortedSize].assets[i];
-        let srcDec: string = `${img.srcDir}${toKebabCase(img.name)}`;
-
-        if (!!asset.size) {
-          srcDec += `-${asset.size}`;
-        }
-        if (!!asset.definition) {
-          srcDec += `-${asset.definition}`;
-        }
-        if (!!asset.extension) {
-          srcDec += `${asset.extension}`;
-        }
-
-        if (!!asset.definition) {
-          srcDec += ` ${asset.definition?.match(/\d/)![0]}x`;
-        }
-
-        if (i === 0) {
-          file.writeln(`    src="${srcDec}"`);
-
-          if (img.sizes[sortedSize].assets.length > 1) {
-            file.writeln(`    srcset="`);
-          }
-        } else {
-          if (i === img.sizes[sortedSize].assets.length - 1) {
-            file.writeln(`      ${srcDec}`);
-            file.writeln(`    "`);
+            if (len > 1) {
+              file.writeln(`${tab}${tab}srcset="`);
+            }
           } else {
-            file.writeln(`      ${srcDec},`);
+            if (i === len - 1) {
+              file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)}`);
+              file.writeln(`${tab}${tab}"`);
+            } else {
+              file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)},`);
+            }
           }
         }
+
+        file.writeln(`${tab}/>`);
+      } else {
+        file.writeln(`${tab}<source`);
+        file.writeln(
+          `${tab}${tab}media="${(Number(img.contexts[sortedContexts[i - 2]]!.maxWidth!.match(/\d+/)![0]) + 1) / 16}em"`
+        );
+        file.writeln(`${tab}${tab}srcset="`);
+
+        for (let i: number = 0, len: number = assets.length; i < len; i++) {
+          const asset: Asset = assets[i];
+
+          if (i === len - 1) {
+            file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)}`);
+            file.writeln(`${tab}${tab}"`);
+          } else {
+            file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)},`);
+          }
+        }
+
+        file.writeln(`${tab}/>`);
       }
-
-      file.writeln(`  />`);
     }
-  }
 
-  if (img.sortedSizes.length > 1) {
     file.writeln(`</picture>`);
+  } else {
+    file.writeln(`<img`);
+
+    if (hasAlt(img.alt)) {
+      file.writeln(`${tab}alt="${img.alt}"`);
+    }
+
+    const assets: Assets = [];
+
+    for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
+      const sortedContext: TShirtSize = sortedContexts[i];
+      const contextAssets: Assets = img.contexts[sortedContext]!.assets;
+
+      for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
+        const contextAsset: Asset = contextAssets[i];
+
+        if (!hasIndex(contextAsset.index, assets)) {
+          assets.push(contextAsset);
+        }
+      }
+    }
+
+    sortAssets(assets);
+
+    for (let i: number = 0, len: number = assets.length; i < len; i++) {
+      const asset: Asset = assets[i];
+
+      if (i === 0) {
+        file.writeln(`${tab}src="${getAssetSrc(asset)}"`);
+
+        if (len > 1) {
+          file.writeln(`${tab}srcset="`);
+        }
+      } else {
+        if (i === len - 1) {
+          file.writeln(`${tab}${tab}${getAssetSrc(asset)}`);
+          file.writeln(`${tab}"`);
+        } else {
+          file.writeln(`${tab}${tab}${getAssetSrc(asset)},`);
+        }
+      }
+    }
+
+    file.writeln(`/>`);
   }
 
   file.close();
+
+  const layerStatements: any = {};
+  const layersToUpdate: number[] = [];
+
+  for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
+    const sortedContext: TShirtSize = sortedContexts[i];
+    const contextAssets: Assets = img.contexts[sortedContext]!.assets;
+
+    for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
+      const contextAsset: Asset = contextAssets[i];
+
+      if (layersToUpdate.indexOf(contextAsset.layerId) === -1) {
+        const statements = getLayerStatements(contextAsset.layerId);
+
+        layerStatements[contextAsset.layerId] = statements;
+        layersToUpdate.push(contextAsset.layerId);
+      }
+    }
+  }
+
+  const scanLayers = (layers: Layers): void => {
+    const isGroupLayer = (layer: Layer): layer is LayerSet => {
+      return layer.typename === `LayerSet`;
+    };
+
+    for (let i: number = 0, len: number = layers.length; i < len; i++) {
+      const layer: Layer = layers[i];
+
+      if (layersToUpdate.indexOf(layer.id) !== -1) {
+        layer.name = layerStatements[layer.id].reverse().join(`, `);
+      }
+
+      if (isGroupLayer(layer)) {
+        scanLayers(layer.layers);
+      }
+    }
+  };
+
+  scanLayers(app.activeDocument.layers);
 };
 
-interface EditTextRef {
-  [key: string]: EditText;
+interface Asset {
+  args: AssetArgs;
+  index: number;
+  layerId: number;
 }
 
-interface ResponsiveImage {
-  altText: string;
-  compress: boolean;
+interface AssetArgPatterns {
+  context: RegExp;
+  def: RegExp;
+  ext: RegExp;
+  qual: RegExp;
+  size: RegExp;
+}
+
+interface AssetArgs {
+  context?: string;
+  def?: string;
+  ext: string;
   name: string;
-  sizes: Sizes;
-  sortedSizes: string[];
+  qual?: string;
+  size?: string;
+}
+
+type AssetParam = `context` | `def` | `ext` | `qual` | `size`;
+type Assets = Asset[];
+
+interface Context {
+  assets: Assets;
+  maxWidth?: string;
+}
+
+interface Contexts {
+  l?: Context;
+  m?: Context;
+  s?: Context;
+  unset?: Context;
+  xl?: Context;
+  xs?: Context;
+}
+
+type TShirtSize = `l` | `m` | `s` | `unset` | `xl` | `xs`;
+type TShirtSizes = TShirtSize[];
+
+const getAssetData = (cb: (assetData: Contexts) => void): void => {
+  const scanLayers = (layers: Layers, cb: (assetData: Contexts) => void): void => {
+    const addAssetArgProp = (prop: AssetParam, arg: string, obj: AssetArgs): void => {
+      if (!!arg) {
+        obj[prop] = arg;
+      } else {
+        return;
+      }
+    };
+    const addAsset = (prop: TShirtSize, asset: Asset, obj: Contexts): void => {
+      if (!!obj[prop]) {
+        if (!hasIndex(asset.index, obj[prop]!.assets)) {
+          obj[prop]!.assets.push(asset);
+        }
+      } else {
+        obj[prop] = {
+          assets: [asset],
+        };
+
+        if (prop !== `unset`) {
+          obj[prop]!.maxWidth = breakpoints[prop];
+        }
+      }
+    };
+    const getAssetArg = (param: AssetParam, statement: string): string => {
+      if (assetArgPatterns[param].test(statement)) {
+        return statement.match(assetArgPatterns[param])![0];
+      } else {
+        return ``;
+      }
+    };
+    const getAssetIndex = (def: string): number => {
+      if (!!def) {
+        return Number(def.match(/\d+/));
+      } else {
+        return 1;
+      }
+    };
+    const getTShirtSize = (context: string): TShirtSize => {
+      let tShirtSize: TShirtSize = `unset`;
+
+      if (/^e?x(tra)?-*?l((ar)?ge)?$/i.test(context)) {
+        tShirtSize = `xl`;
+      } else if (/^e?x(tra)?-*?s(m(al)?l)?$/i.test(context)) {
+        tShirtSize = `xs`;
+      } else if (/^l((ar)?ge)?$/i.test(context)) {
+        tShirtSize = `l`;
+      } else if (/^m(ed(ium)?)?$/i.test(context)) {
+        tShirtSize = `m`;
+      } else if (/^s(m(al)?l)?$/i.test(context)) {
+        tShirtSize = `s`;
+      }
+
+      return tShirtSize;
+    };
+    const hasAssetDeclaration = (statement: string): boolean => {
+      return assetArgPatterns.ext.test(statement);
+    };
+    const isAssetLayer = (layer: Layer): boolean => {
+      return hasAssetDeclaration(layer.name);
+    };
+    const isGroupLayer = (layer: Layer): layer is LayerSet => {
+      return layer.typename === `LayerSet`;
+    };
+    const removeAssetArg = (param: AssetParam, statement: string): string => {
+      return statement.replace(assetArgPatterns[param], ``).replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0\-_]+$/g, ``);
+    };
+
+    const assetArgPatterns: AssetArgPatterns = {
+      context: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
+      def: /@?[1-9]x?$/i,
+      ext: /\.(gif|jpe?g|png)/i,
+      qual: /(([1-9][0-9]?|100)%|10|[1-9])$/,
+      size: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)(?=\s)/i,
+    };
+
+    scanDepth++;
+
+    for (let i: number = 0, len: number = layers.length; i < len; i++) {
+      const layer: Layer = layers[i];
+
+      if (isAssetLayer(layer)) {
+        const statements: string[] = layer.name.split(`,`);
+
+        for (let i: number = 0, len: number = statements.length; i < len; i++) {
+          let statement: string = statements[i].trim();
+
+          if (hasAssetDeclaration(statement)) {
+            let size: string = getAssetArg(`size`, statement);
+            statement = removeAssetArg(`size`, statement);
+
+            let qual: string = getAssetArg(`qual`, statement);
+            statement = removeAssetArg(`qual`, statement);
+
+            let ext: string = getAssetArg(`ext`, statement);
+            statement = removeAssetArg(`ext`, statement);
+
+            let def: string = getAssetArg(`def`, statement);
+            statement = removeAssetArg(`def`, statement);
+
+            let context: string = getAssetArg(`context`, statement);
+            statement = removeAssetArg(`context`, statement);
+
+            const assetArgs: AssetArgs = {
+              ext,
+              name: statement,
+            };
+
+            addAssetArgProp(`def`, def, assetArgs);
+            addAssetArgProp(`context`, context, assetArgs);
+            addAssetArgProp(`qual`, qual, assetArgs);
+            addAssetArgProp(`size`, size, assetArgs);
+
+            const asset: Asset = {
+              args: assetArgs,
+              index: getAssetIndex(def),
+              layerId: layer.id,
+            };
+            const tShirtSize: TShirtSize = getTShirtSize(context);
+
+            addAsset(tShirtSize, asset, assetData);
+          }
+        }
+      }
+
+      if (isGroupLayer(layer)) {
+        scanLayers(layer.layers, cb);
+      }
+    }
+
+    scanDepth--;
+
+    if (!scanDepth) {
+      cb(assetData);
+    }
+  };
+
+  const assetData: Contexts = {};
+  let scanDepth: number = 0;
+
+  scanLayers(app.activeDocument.layers, cb);
+};
+const hasIndex = (index: number, assets: Assets): boolean => {
+  let res: boolean = false;
+
+  for (let i: number = 0, len: number = assets.length; i < len; i++) {
+    const asset: Asset = assets[i];
+
+    if (asset.index === index) {
+      res = true;
+
+      break;
+    }
+  }
+
+  return res;
+};
+const hasMultipleContexts = (sizes: TShirtSizes): boolean => {
+  return sizes.length > 1 && sizes.indexOf(`unset`) === -1;
+};
+
+interface EditTexts {
+  l?: EditText;
+  m?: EditText;
+  s?: EditText;
+  unset?: EditText;
+  xl?: EditText;
+  xs?: EditText;
+}
+
+interface Image {
+  alt: string;
+  compress: boolean;
+  contexts: Contexts;
+  name: string;
   srcDir: string;
 }
 
-const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
+const promptUser = (assetData: Contexts, cb: (img: Image) => void): void => {
   const handleCancel = (): void => {
     dialog.close();
   };
   const handleSave = (): void => {
-    const img: ResponsiveImage = {
-      altText: altTxtInput.text,
+    dialog.close();
+
+    const img: Image = {
+      alt: altInput.text,
       compress: compressCheckbox.value,
+      contexts: assetData,
       name: nameInput.text,
-      sizes,
-      sortedSizes,
       srcDir: srcDirInput.text,
     };
 
-    dialog.close();
-
-    for (let i: number = 0; i < sizeInputRefs.length; i++) {
-      const sizeInputRef: EditTextRef = sizeInputRefs[i];
-      const id: string = Object.keys(sizeInputRef)[0];
-      const input: EditText = sizeInputRef[id];
-
-      img.sizes[id].maxWidth = input.text;
+    for (let tShirtSize in contextInputs) {
+      if (isTShirtSize(tShirtSize)) {
+        img.contexts[tShirtSize]!.maxWidth = contextInputs[tShirtSize]!.text;
+      }
     }
 
     cb(img);
   };
-  const sortSizes = (sizes: string[], orderedSizes: string[]): string[] => {
-    const sortedSizes: string[] = [];
-
-    for (let i: number = 0; i < orderedSizes.length; i++) {
-      const orderedSize: string = orderedSizes[i];
-
-      if (sizes.indexOf(orderedSize) !== -1) {
-        sortedSizes.push(orderedSize);
-      }
-    }
-
-    return sortedSizes;
+  const hasAsset = (assetData: Contexts): boolean => {
+    return !!Object.keys(assetData).length;
+  };
+  const isTShirtSize = (str: string): str is TShirtSize => {
+    const tShirtSizes: TShirtSizes = [`xs`, `s`, `m`, `l`, `xl`, `unset`];
+    return !!tShirtSizes.indexOf(str);
   };
 
-  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
-  const sizeInputRefs: EditTextRef[] = [];
-  const sizeOrder: string[] = [`xs`, `s`, `m`, `l`, `xl`, `unset`];
-  const sortedSizes: string[] = sortSizes(Object.keys(sizes), sizeOrder);
-
   const dialog: Window = new Window(`dialog`, `Generate Responsive Image`);
-
   // The following statement resolves a presentational issue in PhotoShop where
   // buttons are rendered inconsistently.
   // @ts-ignore
@@ -521,13 +687,15 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   nameGroup.alignment = `right`;
   nameGroup.spacing = 0;
 
+  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+
   const nameInput: EditText = nameGroup.add(`edittext`, undefined, docName);
   nameInput.active = true;
   nameInput.characters = 16;
   nameInput.helpTip = `Add the image's name`;
 
   const srcDirGroup: Group = infoPanel.add(`group`);
-  srcDirGroup.add(`statictext`, undefined, `Directory:`);
+  srcDirGroup.add(`statictext`, undefined, `Src Directory:`);
   srcDirGroup.alignment = `right`;
   srcDirGroup.spacing = 0;
 
@@ -535,49 +703,41 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   srcDirInput.characters = 16;
   srcDirInput.helpTip = `Add the image's source directory`;
 
-  const altTxtGroup: Group = infoPanel.add(`group`);
-  altTxtGroup.add(`statictext`, undefined, `Alt Text:`);
-  altTxtGroup.alignment = `right`;
-  altTxtGroup.spacing = 0;
+  const altGroup: Group = infoPanel.add(`group`);
+  altGroup.add(`statictext`, undefined, `Alt Text:`);
+  altGroup.alignment = `right`;
+  altGroup.spacing = 0;
 
-  const altTxtInput: EditText = altTxtGroup.add(`edittext`);
-  altTxtInput.characters = 16;
-  altTxtInput.helpTip = `Add the image's alternative text`;
+  const altInput: EditText = altGroup.add(`edittext`);
+  altInput.characters = 16;
+  altInput.helpTip = `Add the image's alternative text`;
 
-  if (!!sortedSizes.length) {
-    const sizePanel: Panel = dialog.add(
-      `panel`,
-      undefined,
-      `Image Breakpoints`
-    );
-    sizePanel.alignment = `fill`;
-    sizePanel.margins = 16;
-    sizePanel.spacing = 12;
+  const contextInputs: EditTexts = {};
+  const sortedContexts: TShirtSizes = sortContexts(Object.keys(assetData));
 
-    for (let i: number = 0; i < sortedSizes.length; i++) {
-      const sortedSize: string = sortedSizes[i];
+  if (hasMultipleContexts(sortedContexts)) {
+    const contextPanel: Panel = dialog.add(`panel`, undefined, `Image Breakpoints`);
+    contextPanel.alignment = `fill`;
+    contextPanel.margins = 16;
+    contextPanel.spacing = 12;
 
-      const sizeGroup: Group = sizePanel.add(`group`);
-      sizeGroup.add(`statictext`, undefined, `${sortedSize.toUpperCase()}:`);
-      sizeGroup.alignment = `right`;
-      sizeGroup.spacing = 0;
+    for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
+      const sortedContext: TShirtSize = sortedContexts[i];
 
-      const sizeInput: EditText = sizeGroup.add(`edittext`);
-      sizeInput.characters = 16;
-      sizeInput.text = `${breakpoints[sortedSize]}px`;
-      sizeInput.helpTip = `Add the breakpoint's max-width`;
+      const contextGroup: Group = contextPanel.add(`group`);
+      contextGroup.add(`statictext`, undefined, `${sortedContext.toUpperCase()}:`);
+      contextGroup.alignment = `right`;
+      contextGroup.spacing = 0;
 
-      let sizeInputRef: EditTextRef = {};
-      sizeInputRef[sortedSize] = sizeInput;
-      sizeInputRefs.push(sizeInputRef);
+      const contextInput: EditText = contextGroup.add(`edittext`, undefined, assetData[sortedContext]!.maxWidth);
+      contextInput.characters = 16;
+      contextInput.helpTip = `Add the breakpoint's max-width`;
+
+      contextInputs[sortedContext] = contextInput;
     }
   }
 
-  const compressCheckbox: Checkbox = dialog.add(
-    'checkbox',
-    undefined,
-    'Compress asset arguments'
-  );
+  const compressCheckbox: Checkbox = dialog.add('checkbox', undefined, 'Compress asset arguments');
   compressCheckbox.alignment = `fill`;
   compressCheckbox.value = true;
 
@@ -591,11 +751,27 @@ const promptUser = (sizes: Sizes, cb: (img: ResponsiveImage) => void): void => {
   const saveBtn: Button = btnGroup.add(`button`, undefined, `Save`);
   saveBtn.onClick = handleSave;
 
-  dialog.show();
+  if (hasAsset(assetData)) {
+    dialog.show();
+  }
+};
+const sortContexts = (sizes: string[]): TShirtSizes => {
+  const orderedContexts: TShirtSizes = [`xs`, `s`, `m`, `l`, `xl`, `unset`];
+  const sortedContexts: TShirtSizes = [];
+
+  for (let i: number = 0, len: number = orderedContexts.length; i < len; i++) {
+    const orderedContext: TShirtSize = orderedContexts[i];
+
+    if (sizes.indexOf(orderedContext) !== -1) {
+      sortedContexts.push(orderedContext);
+    }
+  }
+
+  return sortedContexts;
 };
 
-getAssetSizes((sizes) => {
-  promptUser(sizes, (img) => {
-    generateResponsiveImage(img);
+getAssetData((assetData): void => {
+  promptUser(assetData, (img): void => {
+    generateImg(img);
   });
 });
