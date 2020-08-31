@@ -1,13 +1,13 @@
 // Polyfills
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-declare interface Array<T> {
-  indexOf: (searchElement: any, fromIndex?: any) => number;
-}
 
 // Extends the Array object's interface to include support for
 // Array.prototype.indexOf().
 if (!Array.prototype.indexOf) {
-  Array.prototype.indexOf = function (searchElement: any, fromIndex?: any): number {
+  Array.prototype.indexOf = function (
+    searchElement: any,
+    fromIndex?: any
+  ): number {
     let k: any;
 
     if (this == null) {
@@ -38,10 +38,6 @@ if (!Array.prototype.indexOf) {
   };
 }
 
-declare interface Object {
-  keys: (obj: any) => string[];
-}
-
 // Extends the Object object's interface to include support for Object.keys().
 if (!Object.keys) {
   Object.keys = (function (): (obj: any) => string[] {
@@ -54,11 +50,17 @@ if (!Object.keys) {
       `propertyIsEnumerable`,
       `constructor`,
     ];
-    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(`toString`);
-    const hasOwnProperty: (name: string) => boolean = Object.prototype.hasOwnProperty;
+    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(
+      `toString`
+    );
+    const hasOwnProperty: (name: string) => boolean =
+      Object.prototype.hasOwnProperty;
 
     return function (obj: any): string[] {
-      if (typeof obj !== `function` && (typeof obj !== `object` || obj === null)) {
+      if (
+        typeof obj !== `function` &&
+        (typeof obj !== `object` || obj === null)
+      ) {
         alert(`Error: Object.keys()\nCalled on a non-object.`);
       }
 
@@ -83,10 +85,6 @@ if (!Object.keys) {
   })();
 }
 
-declare interface String {
-  trim(): string;
-}
-
 // Extends the String object's interface to include support for
 // String.prototype.trim().
 if (!String.prototype.trim) {
@@ -97,14 +95,6 @@ if (!String.prototype.trim) {
 
 // Configuration
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-interface Breakpoints {
-  l: string;
-  m: string;
-  s: string;
-  xl: string;
-  xs: string;
-}
-
 const breakpoints: Breakpoints = {
   l: `1280px`,
   m: `768px`,
@@ -117,7 +107,7 @@ const srcDir: string = `images/`;
 
 // Application
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-const generateImg = (img: Image): void => {
+const generateImg = (img: TempImage): void => {
   const compressArg = (prop: AssetParam, obj: AssetArgs): void => {
     if (!!obj[prop]) {
       let compressedArg: string = obj[prop]!.toLowerCase();
@@ -135,7 +125,9 @@ const generateImg = (img: Image): void => {
       } else if (prop === `qual`) {
         compressedArg = compressedArg.replace(/0{1,2}%$/, ``);
       } else if (prop === `size`) {
-        compressedArg = compressedArg.replace(`px`, ``).replace(/\s*?x\s*/i, `x`);
+        compressedArg = compressedArg
+          .replace(`px`, ``)
+          .replace(/\s*?x\s*/i, `x`);
       }
 
       obj[prop] = compressedArg;
@@ -201,7 +193,11 @@ const generateImg = (img: Image): void => {
     for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
       const sortedContext: TShirtSize = sortedContexts[i];
       const contextAssets: Assets = img.contexts[sortedContext]!.assets;
-      for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
+      for (
+        let i: number = 0, len: number = contextAssets.length;
+        i < len;
+        i++
+      ) {
         const contextAsset: Asset = contextAssets[i];
 
         if (contextAsset.layerId === layerId) {
@@ -268,8 +264,8 @@ const generateImg = (img: Image): void => {
     file.remove();
   }
 
-  file.encoding = 'utf-8';
-  file.open('w');
+  file.encoding = "utf-8";
+  file.open("w");
 
   const tab: string = `  `;
 
@@ -310,7 +306,13 @@ const generateImg = (img: Image): void => {
       } else {
         file.writeln(`${tab}<source`);
         file.writeln(
-          `${tab}${tab}media="${(Number(img.contexts[sortedContexts[i - 2]]!.maxWidth!.match(/\d+/)![0]) + 1) / 16}em"`
+          `${tab}${tab}media="${
+            (Number(
+              img.contexts[sortedContexts[i - 2]]!.maxWidth!.match(/\d+/)![0]
+            ) +
+              1) /
+            16
+          }em"`
         );
         file.writeln(`${tab}${tab}srcset="`);
 
@@ -343,7 +345,11 @@ const generateImg = (img: Image): void => {
       const sortedContext: TShirtSize = sortedContexts[i];
       const contextAssets: Assets = img.contexts[sortedContext]!.assets;
 
-      for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
+      for (
+        let i: number = 0, len: number = contextAssets.length;
+        i < len;
+        i++
+      ) {
         const contextAsset: Asset = contextAssets[i];
 
         if (!hasIndex(contextAsset.index, assets)) {
@@ -418,52 +424,16 @@ const generateImg = (img: Image): void => {
   scanLayers(app.activeDocument.layers);
 };
 
-interface Asset {
-  args: AssetArgs;
-  index: number;
-  layerId: number;
-}
-
-interface AssetArgPatterns {
-  context: RegExp;
-  def: RegExp;
-  ext: RegExp;
-  qual: RegExp;
-  size: RegExp;
-}
-
-interface AssetArgs {
-  context?: string;
-  def?: string;
-  ext: string;
-  name: string;
-  qual?: string;
-  size?: string;
-}
-
-type AssetParam = `context` | `def` | `ext` | `qual` | `size`;
-type Assets = Asset[];
-
-interface Context {
-  assets: Assets;
-  maxWidth?: string;
-}
-
-interface Contexts {
-  l?: Context;
-  m?: Context;
-  s?: Context;
-  unset?: Context;
-  xl?: Context;
-  xs?: Context;
-}
-
-type TShirtSize = `l` | `m` | `s` | `unset` | `xl` | `xs`;
-type TShirtSizes = TShirtSize[];
-
 const getAssetData = (cb: (assetData: Contexts) => void): void => {
-  const scanLayers = (layers: Layers, cb: (assetData: Contexts) => void): void => {
-    const addAssetArgProp = (prop: AssetParam, arg: string, obj: AssetArgs): void => {
+  const scanLayers = (
+    layers: Layers,
+    cb: (assetData: Contexts) => void
+  ): void => {
+    const addAssetArgProp = (
+      prop: AssetParam,
+      arg: string,
+      obj: AssetArgs
+    ): void => {
       if (!!arg) {
         obj[prop] = arg;
       } else {
@@ -526,7 +496,9 @@ const getAssetData = (cb: (assetData: Contexts) => void): void => {
       return layer.typename === `LayerSet`;
     };
     const removeAssetArg = (param: AssetParam, statement: string): string => {
-      return statement.replace(assetArgPatterns[param], ``).replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0\-_]+$/g, ``);
+      return statement
+        .replace(assetArgPatterns[param], ``)
+        .replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0\-_]+$/g, ``);
     };
 
     const assetArgPatterns: AssetArgPatterns = {
@@ -622,31 +594,17 @@ const hasMultipleContexts = (sizes: TShirtSizes): boolean => {
   return sizes.length > 1 && sizes.indexOf(`unset`) === -1;
 };
 
-interface EditTexts {
-  l?: EditText;
-  m?: EditText;
-  s?: EditText;
-  unset?: EditText;
-  xl?: EditText;
-  xs?: EditText;
-}
-
-interface Image {
-  alt: string;
-  compress: boolean;
-  contexts: Contexts;
-  name: string;
-  srcDir: string;
-}
-
-const promptUser = (assetData: Contexts, cb: (img: Image) => void): void => {
+const promptUser = (
+  assetData: Contexts,
+  cb: (img: TempImage) => void
+): void => {
   const handleCancel = (): void => {
     dialog.close();
   };
   const handleSave = (): void => {
     dialog.close();
 
-    const img: Image = {
+    const img: TempImage = {
       alt: altInput.text,
       compress: compressCheckbox.value,
       contexts: assetData,
@@ -716,7 +674,11 @@ const promptUser = (assetData: Contexts, cb: (img: Image) => void): void => {
   const sortedContexts: TShirtSizes = sortContexts(Object.keys(assetData));
 
   if (hasMultipleContexts(sortedContexts)) {
-    const contextPanel: Panel = dialog.add(`panel`, undefined, `Image Breakpoints`);
+    const contextPanel: Panel = dialog.add(
+      `panel`,
+      undefined,
+      `Image Breakpoints`
+    );
     contextPanel.alignment = `fill`;
     contextPanel.margins = 16;
     contextPanel.spacing = 12;
@@ -725,11 +687,19 @@ const promptUser = (assetData: Contexts, cb: (img: Image) => void): void => {
       const sortedContext: TShirtSize = sortedContexts[i];
 
       const contextGroup: Group = contextPanel.add(`group`);
-      contextGroup.add(`statictext`, undefined, `${sortedContext.toUpperCase()}:`);
+      contextGroup.add(
+        `statictext`,
+        undefined,
+        `${sortedContext.toUpperCase()}:`
+      );
       contextGroup.alignment = `right`;
       contextGroup.spacing = 0;
 
-      const contextInput: EditText = contextGroup.add(`edittext`, undefined, assetData[sortedContext]!.maxWidth);
+      const contextInput: EditText = contextGroup.add(
+        `edittext`,
+        undefined,
+        assetData[sortedContext]!.maxWidth
+      );
       contextInput.characters = 16;
       contextInput.helpTip = `Add the breakpoint's max-width`;
 
@@ -737,7 +707,11 @@ const promptUser = (assetData: Contexts, cb: (img: Image) => void): void => {
     }
   }
 
-  const compressCheckbox: Checkbox = dialog.add('checkbox', undefined, 'Compress asset arguments');
+  const compressCheckbox: Checkbox = dialog.add(
+    "checkbox",
+    undefined,
+    "Compress asset arguments"
+  );
   compressCheckbox.alignment = `fill`;
   compressCheckbox.value = true;
 
