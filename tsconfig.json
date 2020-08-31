@@ -5,11 +5,8 @@
     "noLib": true,
     "strict": true,
     "target": "ES3",
-    "types": [
-      "types-for-adobe/photoshop/2015.5"
-    ]
+    "typeRoots": ["src", "node_modules/types-for-adobe"],
+    "types": ["photoshop/2015.5"]
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/*"]
 }
