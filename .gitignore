@@ -1,6 +1,8 @@
-# Directories
-/dist/
-/node_modules/
+# Dependencies
+node_modules
 
-# OS
+# Distributed version
+dist
+
+# MacOS
 .DS_Store
