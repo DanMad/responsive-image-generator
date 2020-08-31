@@ -17,10 +17,10 @@
     "url": "https://github.com/danmad/responsive-image-generator"
   },
   "author": "DanMad",
-  "main": "index.ts",
+  "main": "dist/responsive-image-generator.jsx",
   "scripts": {
     "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.jsx --extensions \".ts\"",
-    "sort": "sort-package-json"
+    "sort-package": "sort-package-json"
   },
   "husky": {
     "hooks": {
