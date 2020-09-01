@@ -19,7 +19,12 @@
   "author": "DanMad",
   "main": "dist/responsive-image-generator.jsx",
   "scripts": {
-    "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.jsx --extensions \".ts\"",
+    "build": "npm run build:ts && npm run build:rimraf && npm run build:js",
+    "build:js": "npm run build:js:babel && npm run build:js:uglify",
+    "build:js:babel": "babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
+    "build:js:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx",
+    "build:rimraf": "rimraf dist",
+    "build:ts": "tsc --noEmit",
     "sort-package": "sort-package-json"
   },
   "husky": {
@@ -35,6 +40,7 @@
     "husky": "^4.2.5",
     "prettier": "^2.0.5",
     "pretty-quick": "^2.0.1",
+    "rimraf": "^3.0.2",
     "sort-package-json": "^1.44.0",
     "types-for-adobe": "github:pravdomil/types-for-adobe",
     "typescript": "^3.9.5",
