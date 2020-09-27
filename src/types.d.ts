@@ -1,27 +1,33 @@
-declare interface Array<T> {
-  indexOf: (searchElement: any, fromIndex?: any) => number;
-}
+/**
+ *  Adobe® Photoshop's application object
+ */
+declare const app: any;
 
-declare interface Object {
-  keys: (obj: any) => string[];
-}
+/**
+ * An asset object.
+ */
+type Asset = {
+  def: number;
+  fileName: string;
+  id: number;
+};
 
-declare interface String {
-  trim(): string;
-}
+/**
+ * The argments of the context parameter.
+ */
+type AssetContext = "l" | "m" | "s" | "xl" | "xs";
 
-type AssetContext = `l` | `m` | `s` | `xl` | `xs`;
+/**
+ * The parameters of an asset.
+ */
+type AssetParam = "ext" | "context" | "def" | "name" | "qual" | "size";
 
-type RequiredAssetParam = `ext` | `name`;
-
-type OptionalAssetParam = `context` | `def` | `qual` | `size`;
-
-type AssetParam = RequiredAssetParam | OptionalAssetParam;
-
-type Asset = { [key in RequiredAssetParam]: string } &
-  { [key in OptionalAssetParam]?: string };
-
-type Assets = {
-  contexts: Partial<Record<AssetContext, Asset[]>>;
-  layers: Layer[];
+/**
+ * A responsive image.
+ */
+type ResponsiveImage = {
+  altText: string;
+  maxWidths: Partial<Record<AssetContext, number>>;
+  name: string;
+  srcDir: string;
 };
