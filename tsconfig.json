@@ -2,11 +2,8 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "module": "None",
-    "noLib": true,
     "strict": true,
-    "target": "ES3",
-    "typeRoots": ["src", "node_modules/types-for-adobe"],
-    "types": ["photoshop/2015.5"]
+    "target": "ES3"
   },
   "include": ["src/*"]
 }
