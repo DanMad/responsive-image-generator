@@ -16,8 +16,8 @@
     "type": "git",
     "url": "https://github.com/danmad/responsive-image-generator"
   },
+  "license": "MIT",
   "author": "DanMad",
-  "main": "dist/responsive-image-generator.jsx",
   "scripts": {
     "build": "npm run build:ts && npm run build:rimraf && npm run build:js",
     "build:js": "npm run build:js:babel && npm run build:js:uglify",
