@@ -42,7 +42,6 @@
     "pretty-quick": "^2.0.1",
     "rimraf": "^3.0.2",
     "sort-package-json": "^1.46.0",
-    "types-for-adobe": "github:pravdomil/types-for-adobe",
     "typescript": "^4.0.3",
     "uglify-js": "^3.10.4"
   }
