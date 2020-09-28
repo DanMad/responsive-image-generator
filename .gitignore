@@ -1,3 +1,7 @@
+# Artwork
+*.psd
+*.sketch
+
 # Dependencies
 node_modules
 
