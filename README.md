@@ -8,8 +8,10 @@ A plugin to extend Adobe® Photoshop's `Generate > Image Assets` behaviour.
 
 1. Download the [Responsive Image Generator](https://point-to-dl.com/).
 2. Add your copy of the script to Photoshop's `Scripts` directory.
-   - The directory path on Mac OS is: `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`.
-   - The directory path on Windows is: `C:\Program Files\Adobe\Adobe Photoshop 2020\Presets\Scripts`.
+   - The directory path on Mac OS is:
+     `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`.
+   - The directory path on Windows is:
+     `C:\Program Files\Adobe\Adobe Photoshop 2020\Presets\Scripts`.
      **Note:** The paths may vary from the examples above, depending on the version of Photoshop you're running.
 3. Open Photoshop.
 4. Navigate to `File > Scripts > Script Events Manager`. The following dialog should appear:
@@ -85,11 +87,9 @@ Let's sat you entered `"The Mona Lisa"`. This would result in a `responsive-imag
       /images/mona-lisa-med-@3x.jpg 3x
     "
   />
-  <img
-    alt="The Mona Lisa"
-    src="/images/mona-lisa-sml.jpg"
-    srcset="/images/mona-lisa-sml-@2x.jpg 2x, /images/mona-lisa-sml-@3x.jpg 3x"
-  />
+  <img alt="The Mona Lisa" src="/images/mona-lisa-sml.jpg" [//]: #
+  (prettier-ignore) srcset=" /images/mona-lisa-sml-@2x.jpg 2x,
+  /images/mona-lisa-sml-@3x.jpg 3x" />
 </picture>
 ```
 
