@@ -1,9 +1,9 @@
 {
   "name": "responsive-image-generator",
-  "displayName": "Responsive image generator",
+  "displayName": "Responsive Image Generator",
   "version": "1.0.0",
   "private": "true",
-  "description": "A plugin to extend Adobe® Photoshop's default `Generate > Assets` behaviour.",
+  "description": "A plugin to extend Adobe® Photoshop's `Generate > Image Assets` behaviour.",
   "keywords": [
     "Photoshop",
     "Responsive imagery"
