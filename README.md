@@ -8,13 +8,16 @@ A plugin to extend Adobe® Photoshop's `Generate > Image Assets` behaviour.
 
 1. Download the [Responsive Image Generator](https://point-to-dl.com/).
 2. Add your copy of the script to Photoshop's `Scripts` directory.
+
    - The directory path on Mac OS is:
+
      `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`.
+
    - The directory path on Windows is:
+
      `C:\Program Files\Adobe\Adobe Photoshop 2020\Presets\Scripts`.
-     **Note:** The paths may vary from the examples above, depending on the version of Photoshop you're running.
-3. Open Photoshop.
-4. Navigate to `File > Scripts > Script Events Manager`. The following dialog should appear:
+
+**Note:** The paths may vary from the examples above, depending on the version of Photoshop you're running. 3. Open Photoshop. 4. Navigate to `File > Scripts > Script Events Manager`. The following dialog should appear:
 
 ![Adobe® Photoshop's Script Events Manager dialog](./images/installation-support-1.png)
 
