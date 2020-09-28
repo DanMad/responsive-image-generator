@@ -27,7 +27,7 @@ type AssetParam = "ext" | "context" | "def" | "name" | "qual" | "size";
  */
 type ResponsiveImage = {
   altText: string;
+  fileName: string;
   maxWidths: Partial<Record<AssetContext, number>>;
-  name: string;
   srcDir: string;
 };

@@ -15,7 +15,7 @@ const CONTEXT_MAX_WIDTHS: Record<AssetContext, number> = {
  * The default file name that is suggested when generating a responsive image
  * snippet.
  */
-const FILE_NAME: string = `responsive-image-snippet`;
+const FILE_NAME: string = `responsive-image`;
 
 /**
  * The default src directory that assets will be referenced from in the
@@ -23,7 +23,7 @@ const FILE_NAME: string = `responsive-image-snippet`;
  */
 const SRC_DIR: string = `/images`;
 
-// Polyfills
+// ES3 Polyfills
 
 /**
  * Extends the Array object's interface to include support for
@@ -128,8 +128,60 @@ if (!String.prototype.trim) {
 // Application
 
 /**
+ * ...
+ *
+ * @since 1.0.0
+ *
+ * @param file
+ * @param altText
+ * @param srcDir
+ * @param assets
+ * @param tabCount
+ */
+const generateImgTag = (
+  file: any,
+  assets: Asset[],
+  resImg: ResponsiveImage,
+  tabCount: number = 0
+): void => {
+  let tabs: string = ``;
+
+  for (let i: number = 0; i < tabCount; i++) {
+    tabs += `  `;
+  }
+
+  file.writeln(`${tabs}<img`);
+
+  if (!!resImg.altText) {
+    file.writeln(`${tabs}  alt="${resImg.altText}"`);
+  }
+
+  file.writeln(`${tabs}  src="${resImg.srcDir}/${assets[0].fileName}"`);
+
+  if (assets.length > 1) {
+    file.writeln(`${tabs}  srcset="`);
+
+    for (let i: number = 1, len: number = assets.length; i < len; i++) {
+      file.write(
+        `${tabs}    ${resImg.srcDir}/${assets[i].fileName} ${assets[i].def}x`
+      );
+
+      if (i < len - 1) {
+        file.write(`,`);
+      }
+
+      file.write(`\n`);
+    }
+
+    file.writeln(`${tabs}  "`);
+  }
+
+  file.writeln(`${tabs}/>`);
+};
+
+/**
  * Generates a responsive image snippet from the `resImg` object passed and
- * writes the html file to the relevnt directory.
+ * writes the html file to the relevant directory.
  *
  * @since 1.0.0
  *
@@ -139,21 +191,13 @@ if (!String.prototype.trim) {
 const generateResponsiveImg = (resImg: ResponsiveImage): void => {
   const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
   const docPath: string = app.activeDocument.path;
-  let fileName: string = FILE_NAME;
-  let srcDir: string = SRC_DIR;
-
-  if (!!resImg.name) {
-    fileName = resImg.name.trim();
-  }
-
-  if (!!resImg.srcDir) {
-    srcDir = resImg.srcDir.trim().replace(/\s+/g, `-`).replace(/\/+$/, ``);
-  }
 
   // The following statement is ignored as the default File class expects two
   // arguments, whereas Adobe® Photoshop's File class expects one argument:
   // @ts-ignore
-  const file: any = File(`${docPath}/${docName}-assets/${fileName}.html`);
+  const file: any = File(
+    `${docPath}/${docName}-assets/${resImg.fileName}.html`
+  );
 
   if (file.exists) {
     file.remove();
@@ -184,13 +228,13 @@ const generateResponsiveImg = (resImg: ResponsiveImage): void => {
           i < len;
           i++
         ) {
-          file.write(`      ${srcDir}/${contextualAssets[i].fileName}`);
+          file.write(`      ${resImg.srcDir}/${contextualAssets[i].fileName}`);
 
-          if (contextualAssets[i].def !== 1) {
+          if (contextualAssets[i].def > 1) {
             file.write(` ${contextualAssets[i].def}x`);
           }
 
-          if (i !== len - 1) {
+          if (i < len - 1) {
             file.write(`,`);
           }
 
@@ -200,76 +244,16 @@ const generateResponsiveImg = (resImg: ResponsiveImage): void => {
         file.writeln(`    "`);
         file.writeln(`  />`);
       } else {
-        file.writeln(`  <img`);
-
-        if (!!resImg.altText) {
-          file.writeln(`    alt="${resImg.altText}"`);
-        }
-
-        file.writeln(`    src="${srcDir}/${contextualAssets[0].fileName}"`);
-
-        if (contextualAssets.length > 1) {
-          file.writeln(`    srcset="`);
-
-          for (
-            let i: number = 1, len: number = contextualAssets.length;
-            i < len;
-            i++
-          ) {
-            file.write(
-              `      ${srcDir}/${contextualAssets[i].fileName} ${contextualAssets[i].def}x`
-            );
-
-            if (i !== len - 1) {
-              file.write(`,`);
-            }
-
-            file.write(`\n`);
-          }
-
-          file.writeln(`    "`);
-        }
-
-        file.writeln(`  />`);
+        generateImgTag(file, contextualAssets, resImg, 1);
       }
     }
 
     file.writeln(`</picture>`);
   } else {
-    file.writeln(`<img`);
-
-    if (!!resImg.altText) {
-      file.writeln(`  alt="${resImg.altText}"`);
-    }
-
     const context: AssetContext = Object.keys(assets)![0] as AssetContext;
     const contextualAssets: Asset[] = sortAssets(assets[context]!);
 
-    file.writeln(`  src="${srcDir}/${contextualAssets[0].fileName}"`);
-
-    if (contextualAssets.length > 1) {
-      file.writeln(`  srcset="`);
-
-      for (
-        let i: number = 1, len: number = contextualAssets.length;
-        i < len;
-        i++
-      ) {
-        file.write(
-          `    ${srcDir}/${contextualAssets[i].fileName} ${contextualAssets[i].def}x`
-        );
-
-        if (i !== len - 1) {
-          file.write(`,`);
-        }
-
-        file.write(`\n`);
-      }
-
-      file.writeln(`  "`);
-    }
-
-    file.writeln(`/>`);
+    generateImgTag(file, contextualAssets, resImg);
   }
 
   file.close();
@@ -456,17 +440,19 @@ const showDialog = (fn: (data: any) => void): void => {
     dialog.close();
 
     const resImg: ResponsiveImage = {
-      altText: altTextInput.text,
+      altText: !!altTextInput.text ? altTextInput.text.trim() : ``,
+      fileName: !!fileNameInput.text ? fileNameInput.text.trim() : FILE_NAME,
       maxWidths: {},
-      name: fileNameInput.text,
-      srcDir: srcDirInput.text,
+      srcDir: !!srcDirInput.text
+        ? srcDirInput.text.trim().replace(/\s+/g, `%20`).replace(/\/+$/, ``)
+        : SRC_DIR,
     };
 
     if (hasContexts) {
       for (let i: number = 0, len: number = contexts.length; i < len; i++) {
-        resImg.maxWidths[contexts[i]] = toNumber(
-          contextInputs[contexts[i]].text
-        );
+        resImg.maxWidths[contexts[i]] = !!contextInputs[contexts[i]].text
+          ? toNumber(contextInputs[contexts[i]].text)
+          : CONTEXT_MAX_WIDTHS[contexts[i]];
       }
     }
 
@@ -479,7 +465,6 @@ const showDialog = (fn: (data: any) => void): void => {
   // @ts-ignore
   const dialog: any = new Window(`dialog`, `Generate Responsive Image`);
 
-  dialog.cancelElement = null;
   dialog.margins = 16;
 
   const infoPanel: any = dialog.add(`panel`, undefined, `Image Information`);
@@ -500,7 +485,6 @@ const showDialog = (fn: (data: any) => void): void => {
     FILE_NAME
   );
 
-  fileNameInput.active = true;
   fileNameInput.characters = 16;
   fileNameInput.helpTip = `Add the image's file name`;
 
@@ -523,6 +507,7 @@ const showDialog = (fn: (data: any) => void): void => {
 
   const altTextInput: any = altTextGroup.add(`edittext`);
 
+  altTextInput.active = true;
   altTextInput.characters = 16;
   altTextInput.helpTip = `Add the image's alt text`;
 
@@ -540,7 +525,11 @@ const showDialog = (fn: (data: any) => void): void => {
     contextPanel.margins = 16;
     contextPanel.spacing = 12;
 
-    for (let i: number = 0, len: number = contexts.length; i < len; i++) {
+    // This loop intentionally omits the last index of the `contexts` array
+    // because a user shouldn't set a max-width for the image's largest context.
+    // The max-width for a context (or breakpoint) only needs to be set when a
+    // larger context supersedes it.
+    for (let i: number = 0, len: number = contexts.length - 1; i < len; i++) {
       const contextGroup: any = contextPanel.add(`group`);
 
       contextGroup.add(
@@ -558,7 +547,7 @@ const showDialog = (fn: (data: any) => void): void => {
       );
 
       contextInput.characters = 16;
-      contextInput.helpTip = `Add the breakpoint's max-width`;
+      contextInput.helpTip = `Add the context's max-width`;
 
       contextInputs[contexts[i]] = contextInput;
     }
@@ -569,7 +558,7 @@ const showDialog = (fn: (data: any) => void): void => {
   const btnGroup: any = dialog.add(`group`);
 
   btnGroup.alignment = `right`;
-  btnGroup.spacing = 8;
+  btnGroup.spacing = 0;
 
   const cancelBtn: any = btnGroup.add(`button`, undefined, `Cancel`);
 
