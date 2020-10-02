@@ -1,6 +1,6 @@
 # Responsive Image Generator
 
-A plugin to extend Adobe® Photoshop's _Generate Image Assets_ feature. If you'd like to learn more about this feature, read [this article](https://helpx.adobe.com/au/photoshop/using/generate-assets-layers.html).
+A plugin to extend Adobe® Photoshop's [Generate Image Assets](https://helpx.adobe.com/au/photoshop/using/generate-assets-layers.html) feature.
 
 Responsive Image Generator creates HTML snippets from the asset names in your Photoshop document, so that you don't have to.
 
@@ -39,7 +39,7 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 
 Once you've successfully completed the [Installation](https://github.com/DanMad/responsive-image-generator#installation) instructions, saving your documents will call the Responsive Image Generator. If a document's layers contain asset names, then the Responsive Image Generator's dialog will appear.
 
-**Note:** The Responsive Image Generator is designed to extend Photoshop's _Generate Image Assets_ feature. Ensure that it's toggled on by checking `File > Generate > Image Assets`, before saving each document you plan to generate responsive image snippets from.
+**Note:** The Responsive Image Generator is designed to extend Photoshop's _Generate Image Assets_ feature. Ensure that it's toggled on by checking `File > Generate > Image Assets` before saving each document you plan to generate responsive image snippets from.
 
 ### Examples
 
