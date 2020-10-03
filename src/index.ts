@@ -128,15 +128,15 @@ if (!String.prototype.trim) {
 // Application
 
 /**
- * ...
+ * Generates an img tag from `assets` and `resImg`, then writes it to `file`.
  *
  * @since 1.0.0
  *
- * @param file
- * @param altText
- * @param srcDir
- * @param assets
- * @param tabCount
+ * @param {Object} file The file to write the img tag to.
+ * @param {Array} assets The object containing assets to include.
+ * @param {Object} resImg The object containing alt text and src directory path.
+ * @param {number} tabCount The number of tabs the image tag should be nested.
+ * @returns {void} This function doesn't have a return statement.
  */
 const generateImgTag = (
   file: any,
@@ -180,8 +180,61 @@ const generateImgTag = (
 };
 
 /**
- * Generates a responsive image snippet from the `resImg` object passed and
- * writes the html file to the relevant directory.
+ * Generates a picture tag from `resImg`, then writes it to `file`.
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} file The file to write the img tag to.
+ * @param {Object} resImg The object containing alt text, src directory path and
+ * context max-widths.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
+  file.writeln(`<picture>`);
+
+  const contexts: AssetContext[] = sortContexts(Object.keys(assets));
+  const maxWidths: AssetContext[] = sortContexts(Object.keys(resImg.maxWidths));
+
+  for (let i: number = contexts.length; i > 0; i--) {
+    const contextualAssets: Asset[] = sortAssets(assets[contexts[i - 1]]!);
+    const minWidth: number = resImg.maxWidths[maxWidths[i - 2]]! + 1;
+
+    if (i > 1) {
+      file.writeln(`  <source`);
+      file.writeln(`    media="(min-width: ${minWidth / 16}em)"`);
+      file.writeln(`    srcset="`);
+
+      for (
+        let i: number = 0, len: number = contextualAssets.length;
+        i < len;
+        i++
+      ) {
+        file.write(`      ${resImg.srcDir}/${contextualAssets[i].fileName}`);
+
+        if (contextualAssets[i].def > 1) {
+          file.write(` ${contextualAssets[i].def}x`);
+        }
+
+        if (i < len - 1) {
+          file.write(`,`);
+        }
+
+        file.write(`\n`);
+      }
+
+      file.writeln(`    "`);
+      file.writeln(`  />`);
+    } else {
+      generateImgTag(file, contextualAssets, resImg, 1);
+    }
+  }
+
+  file.writeln(`</picture>`);
+};
+
+/**
+ * Generates a responsive image snippet from `resImg` and  writes the html file
+ * to the relevant directory.
  *
  * @since 1.0.0
  *
@@ -207,48 +260,7 @@ const generateResponsiveImg = (resImg: ResponsiveImage): void => {
   file.open("w");
 
   if (hasContexts) {
-    file.writeln(`<picture>`);
-
-    const contexts: AssetContext[] = Object.keys(assets) as AssetContext[];
-    const maxWidths: AssetContext[] = Object.keys(
-      resImg.maxWidths
-    ) as AssetContext[];
-
-    for (let i: number = 0, len = contexts.length; i < len; i++) {
-      const contextualAssets: Asset[] = sortAssets(assets[contexts[i]]!);
-      const maxWidth: number = resImg.maxWidths[maxWidths[i]]!;
-
-      if (i < len - 1) {
-        file.writeln(`  <source`);
-        file.writeln(`    media="(min-width: ${(maxWidth + 1) / 16}em)"`);
-        file.writeln(`    srcset="`);
-
-        for (
-          let i: number = 0, len: number = contextualAssets.length;
-          i < len;
-          i++
-        ) {
-          file.write(`      ${resImg.srcDir}/${contextualAssets[i].fileName}`);
-
-          if (contextualAssets[i].def > 1) {
-            file.write(` ${contextualAssets[i].def}x`);
-          }
-
-          if (i < len - 1) {
-            file.write(`,`);
-          }
-
-          file.write(`\n`);
-        }
-
-        file.writeln(`    "`);
-        file.writeln(`  />`);
-      } else {
-        generateImgTag(file, contextualAssets, resImg, 1);
-      }
-    }
-
-    file.writeln(`</picture>`);
+    generatePictureTag(file, resImg);
   } else {
     const context: AssetContext = Object.keys(assets)![0] as AssetContext;
     const contextualAssets: Asset[] = sortAssets(assets[context]!);
@@ -440,20 +452,41 @@ const showDialog = (fn: (data: any) => void): void => {
     dialog.close();
 
     const resImg: ResponsiveImage = {
-      altText: !!altTextInput.text ? altTextInput.text.trim() : ``,
-      fileName: !!fileNameInput.text ? fileNameInput.text.trim() : FILE_NAME,
+      altText: ``,
+      fileName: FILE_NAME,
       maxWidths: {},
-      srcDir: !!srcDirInput.text
-        ? srcDirInput.text.trim().replace(/\s+/g, `%20`).replace(/\/+$/, ``)
-        : SRC_DIR,
+      srcDir: SRC_DIR,
     };
 
+    if (!!altTextInput.text) {
+      resImg.altText = altTextInput.text;
+    }
+
+    if (!!fileNameInput.text) {
+      resImg.fileName = fileNameInput.text.trim();
+    }
+
     if (hasContexts) {
-      for (let i: number = 0, len: number = contexts.length; i < len; i++) {
-        resImg.maxWidths[contexts[i]] = !!contextInputs[contexts[i]].text
-          ? toNumber(contextInputs[contexts[i]].text)
-          : CONTEXT_MAX_WIDTHS[contexts[i]];
+      // This loop intentionally omits the last index of the `contexts` array
+      // because a user shouldn't set a max-width for the image's largest context.
+      // The max-width for a context (or breakpoint) only needs to be set when a
+      // larger context supersedes it.
+      for (let i: number = 0, len: number = contexts.length - 1; i < len; i++) {
+        if (!!contextInputs[contexts[i]].text) {
+          resImg.maxWidths[contexts[i]] = toNumber(
+            contextInputs[contexts[i]].text
+          );
+        } else {
+          resImg.maxWidths[contexts[i]] = CONTEXT_MAX_WIDTHS[contexts[i]];
+        }
       }
+    }
+
+    if (!!srcDirInput.text) {
+      resImg.srcDir = srcDirInput.text
+        .trim()
+        .replace(/\s+/g, `%20`)
+        .replace(/\/+$/, ``);
     }
 
     fn(resImg);
