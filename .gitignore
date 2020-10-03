@@ -1,6 +1,12 @@
-# Directories
-/dist/
-/node_modules/
+# Artwork
+*.psd
+*.sketch
 
-# OS
+# Dependencies
+node_modules
+
+# Distributed version
+dist
+
+# MacOS
 .DS_Store

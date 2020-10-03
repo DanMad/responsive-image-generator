@@ -1,14 +1,40 @@
-// Polyfills
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-declare interface Array<T> {
-  indexOf: (searchElement: any, fromIndex?: any) => number;
-}
+// Config
 
-// Extends the Array object's interface to include support for
-// Array.prototype.indexOf().
+/**
+ * The default max-width values for each asset context's breakpoint.
+ */
+const CONTEXT_MAX_WIDTHS: Record<AssetContext, number> = {
+  l: 1280,
+  m: 768,
+  s: 480,
+  xl: 1920,
+  xs: 320,
+};
+
+/**
+ * The default file name that is suggested when generating a responsive image
+ * snippet.
+ */
+const FILE_NAME: string = `responsive-image`;
+
+/**
+ * The default src directory that assets will be referenced from in the
+ * responsive image snippet.
+ */
+const SRC_DIR: string = `/images`;
+
+// ES3 Polyfills
+
+/**
+ * Extends the Array object's interface to include support for
+ * Array.prototype.indexOf().
+ */
 if (!Array.prototype.indexOf) {
-  Array.prototype.indexOf = function (searchElement: any, fromIndex?: any): number {
-    let k: any;
+  Array.prototype.indexOf = function (
+    searchElement: any,
+    fromIndex?: any
+  ): number {
+    let k: number;
 
     if (this == null) {
       alert(`Error: Array.prototype.indexOf()\n"this" is null or undefined.`);
@@ -34,17 +60,21 @@ if (!Array.prototype.indexOf) {
         return k;
       }
     }
+
     return -1;
   };
 }
 
-declare interface Object {
-  keys: (obj: any) => string[];
-}
-
-// Extends the Object object's interface to include support for Object.keys().
+/**
+ * Extends the Object object's interface to include support for Object.keys().
+ */
 if (!Object.keys) {
   Object.keys = (function (): (obj: any) => string[] {
+    const hasOwnProperty: (name: string) => boolean =
+      Object.prototype.hasOwnProperty;
+    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(
+      `toString`
+    );
     const dontEnums: string[] = [
       `toString`,
       `toLocaleString`,
@@ -54,11 +84,13 @@ if (!Object.keys) {
       `propertyIsEnumerable`,
       `constructor`,
     ];
-    const hasDontEnumBug: boolean = !{ toString: null }.propertyIsEnumerable(`toString`);
-    const hasOwnProperty: (name: string) => boolean = Object.prototype.hasOwnProperty;
+    const dontEnumsLength: number = dontEnums.length;
 
     return function (obj: any): string[] {
-      if (typeof obj !== `function` && (typeof obj !== `object` || obj === null)) {
+      if (
+        typeof obj !== `function` &&
+        (typeof obj !== `object` || obj === null)
+      ) {
         alert(`Error: Object.keys()\nCalled on a non-object.`);
       }
 
@@ -71,7 +103,7 @@ if (!Object.keys) {
       }
 
       if (hasDontEnumBug) {
-        for (let i: number = 0; i < dontEnums.length; i++) {
+        for (let i: number = 0; i < dontEnumsLength; i++) {
           if (hasOwnProperty.call(obj, dontEnums[i])) {
             result.push(dontEnums[i]);
           }
@@ -83,695 +115,648 @@ if (!Object.keys) {
   })();
 }
 
-declare interface String {
-  trim(): string;
-}
-
-// Extends the String object's interface to include support for
-// String.prototype.trim().
+/**
+ * Extends the String object's interface to include support for
+ * String.prototype.trim().
+ */
 if (!String.prototype.trim) {
   String.prototype.trim = function (): string {
     return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ``);
   };
 }
 
-// Configuration
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-interface Breakpoints {
-  l: string;
-  m: string;
-  s: string;
-  xl: string;
-  xs: string;
-}
+// Application
 
-const breakpoints: Breakpoints = {
-  l: `1280px`,
-  m: `768px`,
-  s: `480px`,
-  xl: `1920px`,
-  xs: `320`,
+/**
+ * Generates an img tag from `assets` and `resImg`, then writes it to `file`.
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} file The file to write the img tag to.
+ * @param {Array} assets The object containing assets to include.
+ * @param {Object} resImg The object containing alt text and src directory path.
+ * @param {number} tabCount The number of tabs the image tag should be nested.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const generateImgTag = (
+  file: any,
+  assets: Asset[],
+  resImg: ResponsiveImage,
+  tabCount: number = 0
+): void => {
+  let tabs: string = ``;
+
+  for (let i: number = 0; i < tabCount; i++) {
+    tabs += `  `;
+  }
+
+  file.writeln(`${tabs}<img`);
+
+  if (!!resImg.altText) {
+    file.writeln(`${tabs}  alt="${resImg.altText}"`);
+  }
+
+  file.writeln(`${tabs}  src="${resImg.srcDir}/${assets[0].fileName}"`);
+
+  if (assets.length > 1) {
+    file.writeln(`${tabs}  srcset="`);
+
+    for (let i: number = 1, len: number = assets.length; i < len; i++) {
+      file.write(
+        `${tabs}    ${resImg.srcDir}/${assets[i].fileName} ${assets[i].def}x`
+      );
+
+      if (i < len - 1) {
+        file.write(`,`);
+      }
+
+      file.write(`\n`);
+    }
+
+    file.writeln(`${tabs}  "`);
+  }
+
+  file.writeln(`${tabs}/>`);
 };
 
-const srcDir: string = `images/`;
+/**
+ * Generates a picture tag from `resImg`, then writes it to `file`.
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} file The file to write the img tag to.
+ * @param {Object} resImg The object containing alt text, src directory path and
+ * context max-widths.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
+  file.writeln(`<picture>`);
 
-// Application
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-const generateImg = (img: Image): void => {
-  const compressArg = (prop: AssetParam, obj: AssetArgs): void => {
-    if (!!obj[prop]) {
-      let compressedArg: string = obj[prop]!.toLowerCase();
+  const contexts: AssetContext[] = sortContexts(Object.keys(assets));
+  const maxWidths: AssetContext[] = sortContexts(Object.keys(resImg.maxWidths));
 
-      if (prop === `context`) {
-        compressedArg = compressedArg
-          .replace(/^e?x(tra)?-*/i, `x`)
-          .replace(/l((ar)?ge)?$/i, `l`)
-          .replace(/^m(ed(ium)?)?$/i, `m`)
-          .replace(/s(m(al)?l)?$/i, `s`);
-      } else if (prop === `def`) {
-        compressedArg = `${compressedArg.match(/[1-9]/)![0]}x`;
-      } else if (prop === `ext`) {
-        compressedArg = compressedArg.replace(`jpeg`, `jpg`);
-      } else if (prop === `qual`) {
-        compressedArg = compressedArg.replace(/0{1,2}%$/, ``);
-      } else if (prop === `size`) {
-        compressedArg = compressedArg.replace(`px`, ``).replace(/\s*?x\s*/i, `x`);
-      }
+  for (let i: number = contexts.length; i > 0; i--) {
+    const contextualAssets: Asset[] = sortAssets(assets[contexts[i - 1]]!);
+    const minWidth: number = resImg.maxWidths[maxWidths[i - 2]]! + 1;
 
-      obj[prop] = compressedArg;
-    }
-  };
-  const getAssetSrc = (asset: Asset): string => {
-    let src: string = `/${trimDir(img.srcDir)}/`;
+    if (i > 1) {
+      file.writeln(`  <source`);
+      file.writeln(`    media="(min-width: ${minWidth / 16}em)"`);
+      file.writeln(`    srcset="`);
 
-    if (!!img.name) {
-      src += toKebabCase(img.name);
-    } else {
-      src += asset.args.name;
-    }
+      for (
+        let i: number = 0, len: number = contextualAssets.length;
+        i < len;
+        i++
+      ) {
+        file.write(`      ${resImg.srcDir}/${contextualAssets[i].fileName}`);
 
-    if (!!asset.args.context) {
-      src += `-${asset.args.context}`;
-    }
-
-    if (!!asset.args.def) {
-      src += `-${asset.args.def}`;
-    }
-
-    src += asset.args.ext;
-
-    if (!!asset.args.context && asset.index > 1) {
-      src += ` ${asset.index}x`;
-    }
-
-    return src;
-  };
-  const getAssetStatement = (asset: Asset): string => {
-    let statement: string = ``;
-
-    if (asset.args.size) {
-      statement += `${asset.args.size} `;
-    }
-
-    if (!!img.name) {
-      statement += toKebabCase(img.name);
-    } else {
-      statement += asset.args.name;
-    }
-
-    if (!!asset.args.context) {
-      statement += `-${asset.args.context}`;
-    }
-
-    if (!!asset.args.def) {
-      statement += `-${asset.args.def}`;
-    }
-
-    statement += asset.args.ext;
-
-    if (!!asset.args.qual) {
-      statement += `${asset.args.qual}`;
-    }
-
-    return statement;
-  };
-  const getLayerStatements = (layerId: number): string[] => {
-    const layerStatements: string[] = [];
-
-    for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
-      const sortedContext: TShirtSize = sortedContexts[i];
-      const contextAssets: Assets = img.contexts[sortedContext]!.assets;
-      for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
-        const contextAsset: Asset = contextAssets[i];
-
-        if (contextAsset.layerId === layerId) {
-          const statement: string = getAssetStatement(contextAsset);
-
-          layerStatements.push(statement);
+        if (contextualAssets[i].def > 1) {
+          file.write(` ${contextualAssets[i].def}x`);
         }
+
+        if (i < len - 1) {
+          file.write(`,`);
+        }
+
+        file.write(`\n`);
       }
-    }
 
-    return layerStatements;
-  };
-  const hasAlt = (alt: string): boolean => {
-    return !!alt;
-  };
-  const sortAssets = (assets: Assets): void => {
-    const defAscend = (a: Asset, b: Asset): number => {
-      return a.index - b.index;
-    };
-
-    assets.sort(defAscend);
-  };
-  const toKebabCase = (str: string): string => {
-    return str
-      .replace(/([A-Z])([A-Z])/g, `$1-$2`)
-      .replace(/([a-z])([A-Z])/g, `$1-$2`)
-      .replace(/[\s_]+/g, `-`)
-      .toLowerCase();
-  };
-  const trimDir = (dir: string): string => {
-    let trimmedDir: string = dir;
-
-    trimmedDir = trimmedDir.replace(/\/{2,}/g, `/`);
-    trimmedDir = trimmedDir.replace(/(^\/*|\/*$)/g, ``);
-
-    return trimmedDir;
-  };
-
-  const sortedContexts: TShirtSizes = sortContexts(Object.keys(img.contexts));
-
-  for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
-    const assets: Assets = img.contexts[sortedContexts[i]]!.assets;
-
-    sortAssets(assets);
-
-    if (img.compress) {
-      for (let i: number = 0, len: number = assets.length; i < len; i++) {
-        const args: AssetArgs = assets[i].args;
-
-        compressArg(`context`, args);
-        compressArg(`def`, args);
-        compressArg(`ext`, args);
-        compressArg(`qual`, args);
-        compressArg(`size`, args);
-      }
+      file.writeln(`    "`);
+      file.writeln(`  />`);
+    } else {
+      generateImgTag(file, contextualAssets, resImg, 1);
     }
   }
 
+  file.writeln(`</picture>`);
+};
+
+/**
+ * Generates a responsive image snippet from `resImg` and  writes the html file
+ * to the relevant directory.
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} resImg The object to process.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const generateResponsiveImg = (resImg: ResponsiveImage): void => {
   const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
-  const docPath: Folder = app.activeDocument.path;
-  const file: File = File(`${docPath}/${docName}-assets/responsive-image.html`);
+  const docPath: string = app.activeDocument.path;
+
+  // The following statement is ignored as the default File class expects two
+  // arguments, whereas Adobe® Photoshop's File class expects one argument:
+  // @ts-ignore
+  const file: any = File(
+    `${docPath}/${docName}-assets/${resImg.fileName}.html`
+  );
 
   if (file.exists) {
     file.remove();
   }
 
-  file.encoding = 'utf-8';
-  file.open('w');
+  file.encoding = "utf-8";
+  file.open("w");
 
-  const tab: string = `  `;
-
-  if (hasMultipleContexts(sortedContexts)) {
-    file.writeln(`<picture>`);
-
-    for (let i: number = sortedContexts.length; i > 0; i--) {
-      const sortedContext: TShirtSize = sortedContexts[i - 1];
-      const assets: Assets = img.contexts[sortedContext]!.assets;
-
-      if (i === 1) {
-        file.writeln(`${tab}<img`);
-
-        if (hasAlt(img.alt)) {
-          file.writeln(`${tab}${tab}alt="${img.alt}"`);
-        }
-
-        for (let i: number = 0, len: number = assets.length; i < len; i++) {
-          const asset: Asset = assets[i];
-
-          if (i === 0) {
-            file.writeln(`${tab}${tab}src="${getAssetSrc(asset)}"`);
-
-            if (len > 1) {
-              file.writeln(`${tab}${tab}srcset="`);
-            }
-          } else {
-            if (i === len - 1) {
-              file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)}`);
-              file.writeln(`${tab}${tab}"`);
-            } else {
-              file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)},`);
-            }
-          }
-        }
-
-        file.writeln(`${tab}/>`);
-      } else {
-        file.writeln(`${tab}<source`);
-        file.writeln(
-          `${tab}${tab}media="${(Number(img.contexts[sortedContexts[i - 2]]!.maxWidth!.match(/\d+/)![0]) + 1) / 16}em"`
-        );
-        file.writeln(`${tab}${tab}srcset="`);
-
-        for (let i: number = 0, len: number = assets.length; i < len; i++) {
-          const asset: Asset = assets[i];
-
-          if (i === len - 1) {
-            file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)}`);
-            file.writeln(`${tab}${tab}"`);
-          } else {
-            file.writeln(`${tab}${tab}${tab}${getAssetSrc(asset)},`);
-          }
-        }
-
-        file.writeln(`${tab}/>`);
-      }
-    }
-
-    file.writeln(`</picture>`);
+  if (hasContexts) {
+    generatePictureTag(file, resImg);
   } else {
-    file.writeln(`<img`);
+    const context: AssetContext = Object.keys(assets)![0] as AssetContext;
+    const contextualAssets: Asset[] = sortAssets(assets[context]!);
 
-    if (hasAlt(img.alt)) {
-      file.writeln(`${tab}alt="${img.alt}"`);
-    }
-
-    const assets: Assets = [];
-
-    for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
-      const sortedContext: TShirtSize = sortedContexts[i];
-      const contextAssets: Assets = img.contexts[sortedContext]!.assets;
-
-      for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
-        const contextAsset: Asset = contextAssets[i];
-
-        if (!hasIndex(contextAsset.index, assets)) {
-          assets.push(contextAsset);
-        }
-      }
-    }
-
-    sortAssets(assets);
-
-    for (let i: number = 0, len: number = assets.length; i < len; i++) {
-      const asset: Asset = assets[i];
-
-      if (i === 0) {
-        file.writeln(`${tab}src="${getAssetSrc(asset)}"`);
-
-        if (len > 1) {
-          file.writeln(`${tab}srcset="`);
-        }
-      } else {
-        if (i === len - 1) {
-          file.writeln(`${tab}${tab}${getAssetSrc(asset)}`);
-          file.writeln(`${tab}"`);
-        } else {
-          file.writeln(`${tab}${tab}${getAssetSrc(asset)},`);
-        }
-      }
-    }
-
-    file.writeln(`/>`);
+    generateImgTag(file, contextualAssets, resImg);
   }
 
   file.close();
-
-  const layerStatements: any = {};
-  const layersToUpdate: number[] = [];
-
-  for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
-    const sortedContext: TShirtSize = sortedContexts[i];
-    const contextAssets: Assets = img.contexts[sortedContext]!.assets;
-
-    for (let i: number = 0, len: number = contextAssets.length; i < len; i++) {
-      const contextAsset: Asset = contextAssets[i];
-
-      if (layersToUpdate.indexOf(contextAsset.layerId) === -1) {
-        const statements = getLayerStatements(contextAsset.layerId);
-
-        layerStatements[contextAsset.layerId] = statements;
-        layersToUpdate.push(contextAsset.layerId);
-      }
-    }
-  }
-
-  const scanLayers = (layers: Layers): void => {
-    const isGroupLayer = (layer: Layer): layer is LayerSet => {
-      return layer.typename === `LayerSet`;
-    };
-
-    for (let i: number = 0, len: number = layers.length; i < len; i++) {
-      const layer: Layer = layers[i];
-
-      if (layersToUpdate.indexOf(layer.id) !== -1) {
-        layer.name = layerStatements[layer.id].reverse().join(`, `);
-      }
-
-      if (isGroupLayer(layer)) {
-        scanLayers(layer.layers);
-      }
-    }
-  };
-
-  scanLayers(app.activeDocument.layers);
 };
 
-interface Asset {
-  args: AssetArgs;
-  index: number;
-  layerId: number;
-}
+/**
+ * Creates an `asset` object from the `str` argument passed and adds it to the
+ * relevant context key of the global `assets` object.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} str The string to process.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const getAsset = (str: string): void => {
+  const regExps: Record<Exclude<AssetParam, "name">, RegExp> = {
+    context: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
+    def: /\-@?[1-9](\.\d+)?x?$/i,
+    ext: /\.(gif|jpe?g|png)$/i,
+    qual: /(([1-9]\d?|100)%|10|[1-9])$/,
+    size: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)\s*/i,
+  };
 
-interface AssetArgPatterns {
-  context: RegExp;
-  def: RegExp;
-  ext: RegExp;
-  qual: RegExp;
-  size: RegExp;
-}
+  let fileName: string = str.trim();
 
-interface AssetArgs {
-  context?: string;
-  def?: string;
-  ext: string;
-  name: string;
-  qual?: string;
-  size?: string;
-}
+  if (regExps.size.test(fileName)) {
+    fileName = fileName.replace(regExps.size, ``);
+  }
 
-type AssetParam = `context` | `def` | `ext` | `qual` | `size`;
-type Assets = Asset[];
+  if (regExps.qual.test(fileName)) {
+    fileName = fileName.replace(regExps.qual, ``);
+  }
 
-interface Context {
-  assets: Assets;
-  maxWidth?: string;
-}
+  const asset: any = {
+    fileName: fileName.replace(/\s+/g, `%20`),
+  };
 
-interface Contexts {
-  l?: Context;
-  m?: Context;
-  s?: Context;
-  unset?: Context;
-  xl?: Context;
-  xs?: Context;
-}
+  if (regExps.ext.test(fileName)) {
+    fileName = fileName.replace(regExps.ext, ``);
+  }
 
-type TShirtSize = `l` | `m` | `s` | `unset` | `xl` | `xs`;
-type TShirtSizes = TShirtSize[];
+  if (regExps.def.test(fileName)) {
+    asset.def = toNumber(fileName.match(regExps.def)![0]);
+    fileName = fileName.replace(regExps.def, ``);
+  } else {
+    asset.def = 1;
+  }
 
-const getAssetData = (cb: (assetData: Contexts) => void): void => {
-  const scanLayers = (layers: Layers, cb: (assetData: Contexts) => void): void => {
-    const addAssetArgProp = (prop: AssetParam, arg: string, obj: AssetArgs): void => {
-      if (!!arg) {
-        obj[prop] = arg;
-      } else {
-        return;
-      }
-    };
-    const addAsset = (prop: TShirtSize, asset: Asset, obj: Contexts): void => {
-      if (!!obj[prop]) {
-        if (!hasIndex(asset.index, obj[prop]!.assets)) {
-          obj[prop]!.assets.push(asset);
-        }
-      } else {
-        obj[prop] = {
-          assets: [asset],
-        };
+  let context: AssetContext = `xs`;
 
-        if (prop !== `unset`) {
-          obj[prop]!.maxWidth = breakpoints[prop];
-        }
-      }
-    };
-    const getAssetArg = (param: AssetParam, statement: string): string => {
-      if (assetArgPatterns[param].test(statement)) {
-        return statement.match(assetArgPatterns[param])![0];
-      } else {
-        return ``;
-      }
-    };
-    const getAssetIndex = (def: string): number => {
-      if (!!def) {
-        return Number(def.match(/\d+/));
-      } else {
-        return 1;
-      }
-    };
-    const getTShirtSize = (context: string): TShirtSize => {
-      let tShirtSize: TShirtSize = `unset`;
+  if (regExps.context.test(fileName)) {
+    context = toContext(fileName.match(regExps.context)![0]);
+  }
 
-      if (/^e?x(tra)?-*?l((ar)?ge)?$/i.test(context)) {
-        tShirtSize = `xl`;
-      } else if (/^e?x(tra)?-*?s(m(al)?l)?$/i.test(context)) {
-        tShirtSize = `xs`;
-      } else if (/^l((ar)?ge)?$/i.test(context)) {
-        tShirtSize = `l`;
-      } else if (/^m(ed(ium)?)?$/i.test(context)) {
-        tShirtSize = `m`;
-      } else if (/^s(m(al)?l)?$/i.test(context)) {
-        tShirtSize = `s`;
-      }
+  if (!!assets[context]) {
+    assets[context]?.push(asset);
+  } else {
+    assets[context] = [asset];
+  }
+};
 
-      return tShirtSize;
-    };
-    const hasAssetDeclaration = (statement: string): boolean => {
-      return assetArgPatterns.ext.test(statement);
-    };
-    const isAssetLayer = (layer: Layer): boolean => {
-      return hasAssetDeclaration(layer.name);
-    };
-    const isGroupLayer = (layer: Layer): layer is LayerSet => {
-      return layer.typename === `LayerSet`;
-    };
-    const removeAssetArg = (param: AssetParam, statement: string): string => {
-      return statement.replace(assetArgPatterns[param], ``).replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0\-_]+$/g, ``);
-    };
+/**
+ * Recursively searches the active document's layer tree for valid asset
+ * arguments, calls `getAsset()` on each argument, and invokes the callback
+ * function passed when complete.
+ *
+ * @since 1.0.0
+ *
+ * @param {Function} fn The callback function to invoke.
+ * @param {Array} layers The layer tree to search.
+ * @param {number} depth The depth of recursion.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const getAssets = (
+  fn: () => void,
+  layers: any = app.activeDocument.layers,
+  depth: number = 0
+): void => {
+  depth++;
 
-    const assetArgPatterns: AssetArgPatterns = {
-      context: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
-      def: /@?[1-9]x?$/i,
-      ext: /\.(gif|jpe?g|png)/i,
-      qual: /(([1-9][0-9]?|100)%|10|[1-9])$/,
-      size: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)(?=\s)/i,
-    };
+  for (let i: number = 0, len: number = layers.length; i < len; i++) {
+    if (hasExtension(layers[i].name)) {
+      const args: string[] = layers[i].name.split(`,`);
 
-    scanDepth++;
+      for (let i: number = 0, len: number = args.length; i < len; i++) {
+        if (hasExtension(args[i])) {
+          getAsset(args[i]);
 
-    for (let i: number = 0, len: number = layers.length; i < len; i++) {
-      const layer: Layer = layers[i];
-
-      if (isAssetLayer(layer)) {
-        const statements: string[] = layer.name.split(`,`);
-
-        for (let i: number = 0, len: number = statements.length; i < len; i++) {
-          let statement: string = statements[i].trim();
-
-          if (hasAssetDeclaration(statement)) {
-            let size: string = getAssetArg(`size`, statement);
-            statement = removeAssetArg(`size`, statement);
-
-            let qual: string = getAssetArg(`qual`, statement);
-            statement = removeAssetArg(`qual`, statement);
-
-            let ext: string = getAssetArg(`ext`, statement);
-            statement = removeAssetArg(`ext`, statement);
-
-            let def: string = getAssetArg(`def`, statement);
-            statement = removeAssetArg(`def`, statement);
-
-            let context: string = getAssetArg(`context`, statement);
-            statement = removeAssetArg(`context`, statement);
-
-            const assetArgs: AssetArgs = {
-              ext,
-              name: statement,
-            };
-
-            addAssetArgProp(`def`, def, assetArgs);
-            addAssetArgProp(`context`, context, assetArgs);
-            addAssetArgProp(`qual`, qual, assetArgs);
-            addAssetArgProp(`size`, size, assetArgs);
-
-            const asset: Asset = {
-              args: assetArgs,
-              index: getAssetIndex(def),
-              layerId: layer.id,
-            };
-            const tShirtSize: TShirtSize = getTShirtSize(context);
-
-            addAsset(tShirtSize, asset, assetData);
+          if (!hasAssets) {
+            hasAssets = true;
           }
         }
       }
-
-      if (isGroupLayer(layer)) {
-        scanLayers(layer.layers, cb);
-      }
     }
 
-    scanDepth--;
-
-    if (!scanDepth) {
-      cb(assetData);
-    }
-  };
-
-  const assetData: Contexts = {};
-  let scanDepth: number = 0;
-
-  scanLayers(app.activeDocument.layers, cb);
-};
-const hasIndex = (index: number, assets: Assets): boolean => {
-  let res: boolean = false;
-
-  for (let i: number = 0, len: number = assets.length; i < len; i++) {
-    const asset: Asset = assets[i];
-
-    if (asset.index === index) {
-      res = true;
-
-      break;
+    if (isGroup(layers[i])) {
+      getAssets(fn, layers[i].layers, depth);
     }
   }
 
-  return res;
+  depth--;
+
+  if (!depth) {
+    fn();
+  }
 };
-const hasMultipleContexts = (sizes: TShirtSizes): boolean => {
-  return sizes.length > 1 && sizes.indexOf(`unset`) === -1;
+
+/**
+ * Checks if `str` contains a valid file extension.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} str The string to check.
+ * @param {Array} types The file types to check for.
+ * @returns {boolean} Returns `true` if `str` contains a valid file extension
+ * from the `types` array, else `false`.
+ *
+ * @example
+ * hasExtension(`fileName.jpg`);
+ * // => true
+ *
+ * hasExtension(`fileName.jpeg`, [`psd`]);
+ * // => false
+ */
+const hasExtension = (
+  str: string,
+  types: string[] = [`gif`, `jpe?g`, `png`]
+): boolean => {
+  if (types.length === 0) {
+    return false;
+  }
+
+  let regExp: string = `\\.(`;
+
+  for (let i: number = 0, len: number = types.length; i < len; i++) {
+    if (i !== types.length - 1) {
+      regExp += `${types[i]}|`;
+    } else {
+      regExp += `${types[i]})`;
+    }
+  }
+
+  return new RegExp(regExp, `i`).test(str);
 };
 
-interface EditTexts {
-  l?: EditText;
-  m?: EditText;
-  s?: EditText;
-  unset?: EditText;
-  xl?: EditText;
-  xs?: EditText;
-}
+/**
+ * Checks if `layer` is a group (LayerSet).
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} layer The layer to check.
+ * @returns {boolean} Returns `true` if `layer` has a typename of `'LayerSet'`,
+ * else `false`.
+ *
+ * @example
+ * const layer = { typename: `ArtLayer` };
+ * const group = { typename: `LayerSet` };
+ *
+ * isGroup(layer);
+ * // => false
+ *
+ * isGroup(group);
+ * // => true
+ */
+const isGroup = (layer: any): boolean => {
+  return layer.typename === `LayerSet`;
+};
 
-interface Image {
-  alt: string;
-  compress: boolean;
-  contexts: Contexts;
-  name: string;
-  srcDir: string;
-}
-
-const promptUser = (assetData: Contexts, cb: (img: Image) => void): void => {
+/**
+ * Presents a dialog with configurable options to the user and invokes the
+ * callback function passed when the 'Save' button is pressed.
+ *
+ * @since 1.0.0
+ *
+ * @param {Function} fn The callback function to invoke.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const showDialog = (fn: (data: any) => void): void => {
   const handleCancel = (): void => {
     dialog.close();
   };
+
   const handleSave = (): void => {
     dialog.close();
 
-    const img: Image = {
-      alt: altInput.text,
-      compress: compressCheckbox.value,
-      contexts: assetData,
-      name: nameInput.text,
-      srcDir: srcDirInput.text,
+    const resImg: ResponsiveImage = {
+      altText: ``,
+      fileName: FILE_NAME,
+      maxWidths: {},
+      srcDir: SRC_DIR,
     };
 
-    for (let tShirtSize in contextInputs) {
-      if (isTShirtSize(tShirtSize)) {
-        img.contexts[tShirtSize]!.maxWidth = contextInputs[tShirtSize]!.text;
+    if (!!altTextInput.text) {
+      resImg.altText = altTextInput.text;
+    }
+
+    if (!!fileNameInput.text) {
+      resImg.fileName = fileNameInput.text.trim();
+    }
+
+    if (hasContexts) {
+      // This loop intentionally omits the last index of the `contexts` array
+      // because a user shouldn't set a max-width for the image's largest context.
+      // The max-width for a context (or breakpoint) only needs to be set when a
+      // larger context supersedes it.
+      for (let i: number = 0, len: number = contexts.length - 1; i < len; i++) {
+        if (!!contextInputs[contexts[i]].text) {
+          resImg.maxWidths[contexts[i]] = toNumber(
+            contextInputs[contexts[i]].text
+          );
+        } else {
+          resImg.maxWidths[contexts[i]] = CONTEXT_MAX_WIDTHS[contexts[i]];
+        }
       }
     }
 
-    cb(img);
-  };
-  const hasAsset = (assetData: Contexts): boolean => {
-    return !!Object.keys(assetData).length;
-  };
-  const isTShirtSize = (str: string): str is TShirtSize => {
-    const tShirtSizes: TShirtSizes = [`xs`, `s`, `m`, `l`, `xl`, `unset`];
-    return !!tShirtSizes.indexOf(str);
+    if (!!srcDirInput.text) {
+      resImg.srcDir = srcDirInput.text
+        .trim()
+        .replace(/\s+/g, `%20`)
+        .replace(/\/+$/, ``);
+    }
+
+    fn(resImg);
   };
 
-  const dialog: Window = new Window(`dialog`, `Generate Responsive Image`);
-  // The following statement resolves a presentational issue in PhotoShop where
-  // buttons are rendered inconsistently.
+  // The following statement is ignored as the default Window class doesn't take
+  // any arguments, whereas Adobe® Photoshop's Window class constructor expects
+  // two arguments:
   // @ts-ignore
-  dialog.cancelElement = null;
+  const dialog: any = new Window(`dialog`, `Generate Responsive Image`);
+
   dialog.margins = 16;
 
-  const infoPanel: Panel = dialog.add(`panel`, undefined, `Image Information`);
+  const infoPanel: any = dialog.add(`panel`, undefined, `Image Information`);
+
   infoPanel.alignment = `fill`;
   infoPanel.margins = 16;
   infoPanel.spacing = 12;
 
-  const nameGroup: Group = infoPanel.add(`group`);
-  nameGroup.add(`statictext`, undefined, `Name:`);
-  nameGroup.alignment = `right`;
-  nameGroup.spacing = 0;
+  const fileNameGroup: any = infoPanel.add(`group`);
 
-  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+  fileNameGroup.add(`statictext`, undefined, `File Name`);
+  fileNameGroup.alignment = `right`;
+  fileNameGroup.spacing = 0;
 
-  const nameInput: EditText = nameGroup.add(`edittext`, undefined, docName);
-  nameInput.active = true;
-  nameInput.characters = 16;
-  nameInput.helpTip = `Add the image's name`;
+  const fileNameInput: any = fileNameGroup.add(
+    `edittext`,
+    undefined,
+    FILE_NAME
+  );
 
-  const srcDirGroup: Group = infoPanel.add(`group`);
-  srcDirGroup.add(`statictext`, undefined, `Src Directory:`);
+  fileNameInput.characters = 16;
+  fileNameInput.helpTip = `Add the image's file name`;
+
+  const srcDirGroup: any = infoPanel.add(`group`);
+
+  srcDirGroup.add(`statictext`, undefined, `Src Directory`);
   srcDirGroup.alignment = `right`;
   srcDirGroup.spacing = 0;
 
-  const srcDirInput: EditText = srcDirGroup.add(`edittext`, undefined, srcDir);
+  const srcDirInput: any = srcDirGroup.add(`edittext`, undefined, SRC_DIR);
+
   srcDirInput.characters = 16;
-  srcDirInput.helpTip = `Add the image's source directory`;
+  srcDirInput.helpTip = `Add the image's src directory path`;
 
-  const altGroup: Group = infoPanel.add(`group`);
-  altGroup.add(`statictext`, undefined, `Alt Text:`);
-  altGroup.alignment = `right`;
-  altGroup.spacing = 0;
+  const altTextGroup: any = infoPanel.add(`group`);
 
-  const altInput: EditText = altGroup.add(`edittext`);
-  altInput.characters = 16;
-  altInput.helpTip = `Add the image's alternative text`;
+  altTextGroup.add(`statictext`, undefined, `Alt Text`);
+  altTextGroup.alignment = `right`;
+  altTextGroup.spacing = 0;
 
-  const contextInputs: EditTexts = {};
-  const sortedContexts: TShirtSizes = sortContexts(Object.keys(assetData));
+  const altTextInput: any = altTextGroup.add(`edittext`);
 
-  if (hasMultipleContexts(sortedContexts)) {
-    const contextPanel: Panel = dialog.add(`panel`, undefined, `Image Breakpoints`);
+  altTextInput.active = true;
+  altTextInput.characters = 16;
+  altTextInput.helpTip = `Add the image's alt text`;
+
+  const contextInputs: Partial<Record<AssetContext, any>> = {};
+  const contexts: AssetContext[] = sortContexts(Object.keys(assets));
+
+  if (contexts.length > 1) {
+    const contextPanel: any = dialog.add(
+      `panel`,
+      undefined,
+      `Image Breakpoints`
+    );
+
     contextPanel.alignment = `fill`;
     contextPanel.margins = 16;
     contextPanel.spacing = 12;
 
-    for (let i: number = 0, len: number = sortedContexts.length; i < len; i++) {
-      const sortedContext: TShirtSize = sortedContexts[i];
+    // This loop intentionally omits the last index of the `contexts` array
+    // because a user shouldn't set a max-width for the image's largest context.
+    // The max-width for a context (or breakpoint) only needs to be set when a
+    // larger context supersedes it.
+    for (let i: number = 0, len: number = contexts.length - 1; i < len; i++) {
+      const contextGroup: any = contextPanel.add(`group`);
 
-      const contextGroup: Group = contextPanel.add(`group`);
-      contextGroup.add(`statictext`, undefined, `${sortedContext.toUpperCase()}:`);
+      contextGroup.add(
+        `statictext`,
+        undefined,
+        `${contexts[i].toUpperCase()}:`
+      );
       contextGroup.alignment = `right`;
       contextGroup.spacing = 0;
 
-      const contextInput: EditText = contextGroup.add(`edittext`, undefined, assetData[sortedContext]!.maxWidth);
-      contextInput.characters = 16;
-      contextInput.helpTip = `Add the breakpoint's max-width`;
+      const contextInput: any = contextGroup.add(
+        `edittext`,
+        undefined,
+        `${CONTEXT_MAX_WIDTHS[contexts[i]]}px`
+      );
 
-      contextInputs[sortedContext] = contextInput;
+      contextInput.characters = 16;
+      contextInput.helpTip = `Add the context's max-width`;
+
+      contextInputs[contexts[i]] = contextInput;
     }
+
+    hasContexts = true;
   }
 
-  const compressCheckbox: Checkbox = dialog.add('checkbox', undefined, 'Compress asset arguments');
-  compressCheckbox.alignment = `fill`;
-  compressCheckbox.value = true;
+  const btnGroup: any = dialog.add(`group`);
 
-  const btnGroup: Group = dialog.add(`group`);
   btnGroup.alignment = `right`;
-  btnGroup.spacing = 8;
+  btnGroup.spacing = 0;
 
-  const cancelBtn: Button = btnGroup.add(`button`, undefined, `Cancel`);
+  const cancelBtn: any = btnGroup.add(`button`, undefined, `Cancel`);
+
   cancelBtn.onClick = handleCancel;
 
-  const saveBtn: Button = btnGroup.add(`button`, undefined, `Save`);
+  const saveBtn: any = btnGroup.add(`button`, undefined, `Save`);
+
   saveBtn.onClick = handleSave;
 
-  if (hasAsset(assetData)) {
-    dialog.show();
-  }
+  dialog.show();
 };
-const sortContexts = (sizes: string[]): TShirtSizes => {
-  const orderedContexts: TShirtSizes = [`xs`, `s`, `m`, `l`, `xl`, `unset`];
-  const sortedContexts: TShirtSizes = [];
 
-  for (let i: number = 0, len: number = orderedContexts.length; i < len; i++) {
-    const orderedContext: TShirtSize = orderedContexts[i];
+/**
+ * Creates a new, sorted array of assets. Assets are sorted by their `def` key
+ * from lowest to highest number, and only included in the new, sorted array if
+ * the `def` key is a unique number. If two assets's `def` keys are the same
+ * number, the asset declared later in the active document will take precedence.
+ *
+ * @since 1.0.0
+ *
+ * @param {Array} arr The array to sort.
+ * @returns {Array} Returns a new, sorted array of assets with unique `def` keys.
+ *
+ * @example
+ * const xs = [
+ *   {def: 1, fileName: `foo.jpg`},
+ *   {def: 1.5, fileName: `bar.jpg`},
+ *   {def: 1, fileName: `baz.jpg`},
+ * ]
+ *
+ * const s = [
+ *   {def: 1, fileName: `foo.png`},
+ *   {def: 1, fileName: `bar.png`},
+ *   {def: 2, fileName: `baz.png`}
+ * ];
+ *
+ * sortAssets(xs);
+ * // => `[{def: 1, fileName: `baz.jpg`}, {def: 1.5, fileName: `bar.jpg`}]`
+ *
+ * sortAssets(s);
+ * // => `[{def: 1, fileName: `bar.png`}, {def: 2, fileName: `baz.png`}]`
+ */
+const sortAssets = (arr: Asset[]): Asset[] => {
+  const sortedArr: Asset[] = arr.sort((a: Asset, b: Asset): number => {
+    if (a.def < b.def) {
+      return -1;
+    }
 
-    if (sizes.indexOf(orderedContext) !== -1) {
-      sortedContexts.push(orderedContext);
+    return 1;
+  });
+  const uniqueDefs: number[] = [];
+  const uniqueSortedArr: Asset[] = [];
+
+  for (let i: number = 0, len: number = sortedArr.length; i < len; i++) {
+    if (uniqueDefs.indexOf(sortedArr[i].def) === -1) {
+      uniqueDefs.push(sortedArr[i].def);
+      uniqueSortedArr.push(sortedArr[i]);
     }
   }
 
-  return sortedContexts;
+  return uniqueSortedArr;
 };
 
-getAssetData((assetData): void => {
-  promptUser(assetData, (img): void => {
-    generateImg(img);
-  });
+/**
+ * Creates a new, sorted array of contexts. Contexts are only included in the
+ * new, sorted array if they exist in the original `arr`.
+ *
+ * @since 1.0.0
+ *
+ * @param {Array} arr The array to sort.
+ * @returns {Array} Returns a new, sorted array of contexts.
+ *
+ * @example
+ * sortContexts([`l`, `m`, `xs`, `s`]);
+ * // => [`xs`, `s`, `m`, `l`]
+ *
+ * sortContexts([`l`, `xl`, `s`]);
+ * // => [`s`, `l`, `xl`]
+ */
+const sortContexts = (arr: any[]): AssetContext[] => {
+  const sortedContexts: AssetContext[] = [`xs`, `s`, `m`, `l`, `xl`];
+  const sortedArr: AssetContext[] = [];
+
+  for (let i = 0, len = sortedContexts.length; i < len; i++) {
+    if (arr.indexOf(sortedContexts[i]) !== -1) {
+      sortedArr.push(sortedContexts[i]);
+    }
+  }
+
+  return sortedArr;
+};
+
+/**
+ * Converts `str` to its corresponding t-shirt size. Defaults to `'xs'` if a
+ * corresponding t-shirt size cannot be determined.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} str The string to check.
+ * @returns {string} Returns the converted t-shirt size, else `'xs'`.
+ *
+ * @example
+ * toContext(`Medium`);
+ * // => `'m'`
+ *
+ * toContext(`Massive`);
+ * // => `'xs'`
+ */
+const toContext = (str: string): AssetContext => {
+  switch (true) {
+    case /^l((ar)?ge)?$/i.test(str):
+      return `l`;
+    case /^m(ed(ium)?)?$/i.test(str):
+      return `m`;
+    case /^s(m(al)?l)?$/i.test(str):
+      return `s`;
+    case /^e?x(tra)?-*l((ar)?ge)?$/i.test(str):
+      return `xl`;
+    default:
+      return `xs`;
+  }
+};
+
+/**
+ * Converts the first series of digits contained in `str` to a number.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} str The string to process.
+ * @returns {number} Returns the first series of digits contained in `str`, else
+ * `NaN`.
+ *
+ * @example
+ * toNumber(`2`);
+ * // => 2
+ *
+ * toNumber(`@1.5x`);
+ * // => 1.5
+ */
+const toNumber = (str: string): number => {
+  if (/\d/.test(str)) {
+    return parseFloat(str.match(/\d+(\.\d+)?/)![0]);
+  }
+
+  return NaN;
+};
+
+/**
+ * The global `assets` object that stores the active document's contextualised
+ * asset arguments.
+ */
+const assets: Partial<Record<AssetContext, Asset[]>> = {};
+
+/**
+ * The global flags referenced throughout this application.
+ */
+let hasAssets: boolean = false;
+let hasContexts: boolean = false;
+
+// Invocation
+
+getAssets(() => {
+  if (hasAssets) {
+    showDialog((resImg: ResponsiveImage) => {
+      generateResponsiveImg(resImg);
+    });
+  }
 });

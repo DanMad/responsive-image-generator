@@ -1,9 +1,9 @@
 {
   "name": "responsive-image-generator",
-  "displayName": "Responsive image generator",
+  "displayName": "Responsive Image Generator",
   "version": "1.0.0",
   "private": "true",
-  "description": "A plugin to extend Adobe® Photoshop's default `Generate > Assets` behaviour.",
+  "description": "A plugin to extend Adobe® Photoshop's Generate Image Assets feature.",
   "keywords": [
     "Photoshop",
     "Responsive imagery"
@@ -16,11 +16,16 @@
     "type": "git",
     "url": "https://github.com/danmad/responsive-image-generator"
   },
+  "license": "MIT",
   "author": "DanMad",
-  "main": "index.ts",
   "scripts": {
-    "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.jsx --extensions \".ts\"",
-    "sort": "sort-package-json"
+    "build": "npm run build:ts && npm run build:rimraf && npm run build:js",
+    "build:js": "npm run build:js:babel && npm run build:js:uglify",
+    "build:js:babel": "babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
+    "build:js:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx",
+    "build:rimraf": "rimraf dist",
+    "build:ts": "tsc --noEmit",
+    "sort-package": "sort-package-json"
   },
   "husky": {
     "hooks": {
@@ -28,16 +33,16 @@
     }
   },
   "devDependencies": {
-    "@babel/cli": "^7.10.1",
-    "@babel/core": "^7.10.2",
-    "@babel/preset-env": "^7.10.2",
+    "@babel/cli": "^7.11.6",
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
     "@babel/preset-typescript": "^7.10.1",
-    "husky": "^4.2.5",
-    "prettier": "^2.0.5",
+    "husky": "^4.3.0",
+    "prettier": "^2.1.2",
     "pretty-quick": "^2.0.1",
-    "sort-package-json": "^1.44.0",
-    "types-for-adobe": "github:pravdomil/types-for-adobe",
-    "typescript": "^3.9.5",
-    "uglify-js": "^3.9.3"
+    "rimraf": "^3.0.2",
+    "sort-package-json": "^1.46.0",
+    "typescript": "^4.0.3",
+    "uglify-js": "^3.10.4"
   }
 }
