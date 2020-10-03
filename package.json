@@ -5,8 +5,13 @@
   "private": "true",
   "description": "A plugin to extend Adobe® Photoshop's Generate Image Assets feature.",
   "keywords": [
+    "Adobe",
+    "Assets",
+    "Generate Image Assets",
+    "HTML",
     "Photoshop",
-    "Responsive imagery"
+    "Responsive image",
+    "Script"
   ],
   "homepage": "https://github.com/danmad/responsive-image-generator#readme",
   "bugs": {
@@ -19,7 +24,7 @@
   "license": "MIT",
   "author": "DanMad",
   "scripts": {
-    "build": "npm run build:ts && npm run build:rimraf && npm run build:js",
+    "build": "npm run build:ts && npm run build:rimraf && npm run build:js && npm run sort-package",
     "build:js": "npm run build:js:babel && npm run build:js:uglify",
     "build:js:babel": "babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
     "build:js:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx",
