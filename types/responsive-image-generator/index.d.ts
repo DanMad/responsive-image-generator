@@ -1,9 +1,4 @@
 /**
- *  Adobe® Photoshop's application object
- */
-declare const app: any;
-
-/**
  * An asset object.
  */
 type Asset = {
