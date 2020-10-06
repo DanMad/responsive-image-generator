@@ -209,11 +209,9 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
         i < len;
         i++
       ) {
-        file.write(`      ${resImg.srcDir}/${contextualAssets[i].fileName}`);
-
-        if (contextualAssets[i].def > 1) {
-          file.write(` ${contextualAssets[i].def}x`);
-        }
+        file.write(
+          `      ${resImg.srcDir}/${contextualAssets[i].fileName} ${contextualAssets[i].def}x`
+        );
 
         if (i < len - 1) {
           file.write(`,`);

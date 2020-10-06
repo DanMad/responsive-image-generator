@@ -95,7 +95,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 48.0625em)"
     srcset="
-      /images/mona-lisa-lge.jpg,
+      /images/mona-lisa-lge.jpg     1x,
       /images/mona-lisa-lge-@2x.jpg 2x,
       /images/mona-lisa-lge-@3x.jpg 3x
     "
@@ -103,7 +103,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 30.0625em)"
     srcset="
-      /images/mona-lisa-med.jpg,
+      /images/mona-lisa-med.jpg     1x,
       /images/mona-lisa-med-@2x.jpg 2x,
       /images/mona-lisa-med-@3x.jpg 3x
     "
