@@ -6,7 +6,7 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 
 ## Installation
 
-1. Download the [Responsive Image Generator](https://www.example.com/).
+1. Download the [Responsive Image Generator](https://danmad.github.io/responsive-image-generator/responsive-image-generator.min.jsx).
 2. Add the downloaded script to Photoshop's `Scripts` directory. The path to this directory is as follows:
 
    - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`
@@ -95,7 +95,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 48.0625em)"
     srcset="
-      /images/mona-lisa-lge.jpg 1x,
+      /images/mona-lisa-lge.jpg     1x,
       /images/mona-lisa-lge-@2x.jpg 2x,
       /images/mona-lisa-lge-@3x.jpg 3x
     "
@@ -103,7 +103,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 30.0625em)"
     srcset="
-      /images/mona-lisa-med.jpg 1x,
+      /images/mona-lisa-med.jpg     1x,
       /images/mona-lisa-med-@2x.jpg 2x,
       /images/mona-lisa-med-@3x.jpg 3x
     "
