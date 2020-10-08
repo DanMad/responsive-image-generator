@@ -6,7 +6,7 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 
 ## Installation
 
-1. Download the [Responsive Image Generator](https://danmad.github.io/responsive-image-generator/responsive-image-generator.min.jsx).
+1. Download the [Responsive Image Generator](https://raw.githubusercontent.com/DanMad/responsive-image-generator/master/dist/responsive-image-generator.min.jsx).
 2. Add the downloaded script to Photoshop's `Scripts` directory. The path to this directory is as follows:
 
    - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`
