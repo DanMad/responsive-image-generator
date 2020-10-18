@@ -192,8 +192,12 @@ const generateImgTag = (
 const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
   file.writeln(`<picture>`);
 
-  const contexts: AssetContext[] = sortContexts(Object.keys(assets));
-  const maxWidths: AssetContext[] = sortContexts(Object.keys(resImg.maxWidths));
+  const contexts: AssetContext[] = sortContexts(
+    Object.keys(assets) as AssetContext[]
+  );
+  const maxWidths: AssetContext[] = sortContexts(
+    Object.keys(resImg.maxWidths) as AssetContext[]
+  );
 
   for (let i: number = contexts.length; i > 0; i--) {
     const contextualAssets: Asset[] = sortAssets(assets[contexts[i - 1]]!);
@@ -260,7 +264,7 @@ const generateResponsiveImg = (resImg: ResponsiveImage): void => {
   if (hasContexts) {
     generatePictureTag(file, resImg);
   } else {
-    const context: AssetContext = Object.keys(assets)![0] as AssetContext;
+    const context: AssetContext = Object.keys(assets)[0] as AssetContext;
     const contextualAssets: Asset[] = sortAssets(assets[context]!);
 
     generateImgTag(file, contextualAssets, resImg);
@@ -543,7 +547,9 @@ const showDialog = (fn: (data: any) => void): void => {
   altTextInput.helpTip = `Add the image's alt text`;
 
   const contextInputs: Partial<Record<AssetContext, any>> = {};
-  const contexts: AssetContext[] = sortContexts(Object.keys(assets));
+  const contexts: AssetContext[] = sortContexts(
+    Object.keys(assets) as AssetContext[]
+  );
 
   if (contexts.length > 1) {
     const contextPanel: any = dialog.add(
@@ -669,17 +675,18 @@ const sortAssets = (arr: Asset[]): Asset[] => {
  * sortContexts([`l`, `xl`, `s`]);
  * // => [`s`, `l`, `xl`]
  */
-const sortContexts = (arr: any[]): AssetContext[] => {
-  const sortedContexts: AssetContext[] = [`xs`, `s`, `m`, `l`, `xl`];
-  const sortedArr: AssetContext[] = [];
+const sortContexts = (arr: AssetContext[]): AssetContext[] => {
+  const sortedContexts: Record<AssetContext, number> = {
+    xs: 0,
+    s: 1,
+    m: 2,
+    l: 3,
+    xl: 4,
+  };
 
-  for (let i = 0, len = sortedContexts.length; i < len; i++) {
-    if (arr.indexOf(sortedContexts[i]) !== -1) {
-      sortedArr.push(sortedContexts[i]);
-    }
-  }
-
-  return sortedArr;
+  return arr.sort((a: AssetContext, b: AssetContext): number => {
+    return sortedContexts[a] - sortedContexts[b];
+  });
 };
 
 /**
