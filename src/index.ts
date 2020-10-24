@@ -1,4 +1,5 @@
 // Config
+// =============================================================================
 
 /**
  * The default max-width values for each asset context's breakpoint.
@@ -12,18 +13,13 @@ const CONTEXT_MAX_WIDTHS: Record<AssetContext, number> = {
 };
 
 /**
- * The default file name that is suggested when generating a responsive image
- * snippet.
- */
-const FILE_NAME: string = `responsive-image`;
-
-/**
  * The default src directory that assets will be referenced from in the
  * responsive image snippet.
  */
 const SRC_DIR: string = `/images`;
 
 // ES3 Polyfills
+// =============================================================================
 
 /**
  * Extends the Array object's interface to include support for
@@ -126,6 +122,7 @@ if (!String.prototype.trim) {
 }
 
 // Application
+// =============================================================================
 
 /**
  * Generates an img tag from `assets` and `resImg`, then writes it to `file`.
@@ -244,7 +241,6 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
  * @returns {void} This function doesn't have a return statement.
  */
 const generateResponsiveImg = (resImg: ResponsiveImage): void => {
-  const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
   const docPath: string = app.activeDocument.path;
 
   // The following statement is ignored as the default File class expects two
@@ -455,7 +451,7 @@ const showDialog = (fn: (data: any) => void): void => {
 
     const resImg: ResponsiveImage = {
       altText: ``,
-      fileName: FILE_NAME,
+      fileName: docName,
       maxWidths: {},
       srcDir: SRC_DIR,
     };
@@ -514,11 +510,7 @@ const showDialog = (fn: (data: any) => void): void => {
   fileNameGroup.alignment = `right`;
   fileNameGroup.spacing = 0;
 
-  const fileNameInput: any = fileNameGroup.add(
-    `edittext`,
-    undefined,
-    FILE_NAME
-  );
+  const fileNameInput: any = fileNameGroup.add(`edittext`, undefined, docName);
 
   fileNameInput.characters = 16;
   fileNameInput.helpTip = `Add the image's file name`;
@@ -751,12 +743,18 @@ const toNumber = (str: string): number => {
 const assets: Partial<Record<AssetContext, Asset[]>> = {};
 
 /**
+ * The default file name when generating a responsive image.
+ */
+const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
+
+/**
  * The global flags referenced throughout this application.
  */
 let hasAssets: boolean = false;
 let hasContexts: boolean = false;
 
 // Invocation
+// =============================================================================
 
 getAssets(() => {
   if (hasAssets) {
