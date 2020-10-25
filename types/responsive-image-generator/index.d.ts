@@ -4,7 +4,6 @@
 type Asset = {
   def: number;
   fileName: string;
-  id: number;
 };
 
 /**

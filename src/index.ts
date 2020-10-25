@@ -125,19 +125,18 @@ if (!String.prototype.trim) {
 // =============================================================================
 
 /**
- * Generates an img tag from `assets` and `resImg`, then writes it to `file`.
+ * Generates an img tag from `resImg` and the global `assets` object, then
+ * writes it to `file`.
  *
  * @since 1.0.0
  *
  * @param {Object} file The file to write the img tag to.
- * @param {Array} assets The object containing assets to include.
  * @param {Object} resImg The object containing alt text and src directory path.
  * @param {number} tabCount The number of tabs the image tag should be nested.
  * @returns {void} This function doesn't have a return statement.
  */
 const generateImgTag = (
   file: any,
-  assets: Asset[],
   resImg: ResponsiveImage,
   tabCount: number = 0
 ): void => {
@@ -153,14 +152,22 @@ const generateImgTag = (
     file.writeln(`${tabs}  alt="${resImg.altText}"`);
   }
 
-  file.writeln(`${tabs}  src="${resImg.srcDir}/${assets[0].fileName}"`);
+  const contextualAssets: Asset[] = assets[contexts[0]]!;
 
-  if (assets.length > 1) {
+  file.writeln(
+    `${tabs}  src="${resImg.srcDir}/${contextualAssets[0].fileName}"`
+  );
+
+  if (contextualAssets.length > 1) {
     file.writeln(`${tabs}  srcset="`);
 
-    for (let i: number = 1, len: number = assets.length; i < len; i++) {
+    for (
+      let i: number = 1, len: number = contextualAssets.length;
+      i < len;
+      i++
+    ) {
       file.write(
-        `${tabs}    ${resImg.srcDir}/${assets[i].fileName} ${assets[i].def}x`
+        `${tabs}    ${resImg.srcDir}/${contextualAssets[i].fileName} ${contextualAssets[i].def}x`
       );
 
       if (i < len - 1) {
@@ -186,19 +193,12 @@ const generateImgTag = (
  * context max-widths.
  * @returns {void} This function doesn't have a return statement.
  */
-const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
+const generatePictureTag = (file: any, resImg: ResponsiveImage): void => {
   file.writeln(`<picture>`);
 
-  const contexts: AssetContext[] = sortContexts(
-    Object.keys(assets) as AssetContext[]
-  );
-  const maxWidths: AssetContext[] = sortContexts(
-    Object.keys(resImg.maxWidths) as AssetContext[]
-  );
-
   for (let i: number = contexts.length; i > 0; i--) {
-    const contextualAssets: Asset[] = sortAssets(assets[contexts[i - 1]]!);
-    const minWidth: number = resImg.maxWidths[maxWidths[i - 2]]! + 1;
+    const contextualAssets: Asset[] = assets[contexts[i - 1]]!;
+    const minWidth: number = resImg.maxWidths[contexts[i - 2]]! + 1;
 
     if (i > 1) {
       file.writeln(`  <source`);
@@ -224,7 +224,7 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
       file.writeln(`    "`);
       file.writeln(`  />`);
     } else {
-      generateImgTag(file, contextualAssets, resImg, 1);
+      generateImgTag(file, resImg, 1);
     }
   }
 
@@ -232,7 +232,7 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
 };
 
 /**
- * Generates a responsive image snippet from `resImg` and  writes the html file
+ * Generates a responsive image snippet from `resImg` and writes the html file
  * to the relevant directory.
  *
  * @since 1.0.0
@@ -241,6 +241,9 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage) => {
  * @returns {void} This function doesn't have a return statement.
  */
 const generateResponsiveImg = (resImg: ResponsiveImage): void => {
+  if (renameAssets) {
+  }
+
   const docPath: string = app.activeDocument.path;
 
   // The following statement is ignored as the default File class expects two
@@ -260,10 +263,7 @@ const generateResponsiveImg = (resImg: ResponsiveImage): void => {
   if (hasContexts) {
     generatePictureTag(file, resImg);
   } else {
-    const context: AssetContext = Object.keys(assets)[0] as AssetContext;
-    const contextualAssets: Asset[] = sortAssets(assets[context]!);
-
-    generateImgTag(file, contextualAssets, resImg);
+    generateImgTag(file, resImg);
   }
 
   file.close();
@@ -284,7 +284,7 @@ const getAsset = (str: string): void => {
     def: /\-@?[1-9](\.\d+)?x?$/i,
     ext: /\.(gif|jpe?g|png)$/i,
     qual: /(([1-9]\d?|100)%|10|[1-9])$/,
-    size: /^\d{1,5}((\.\d{1,3})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)\s*/i,
+    size: /^\d{1,5}((\.\d{1,6})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)\s+/i,
   };
 
   let fileName: string = str.trim();
@@ -327,8 +327,8 @@ const getAsset = (str: string): void => {
 
 /**
  * Recursively searches the active document's layer tree for valid asset
- * arguments, calls `getAsset()` on each argument, and invokes the callback
- * function passed when complete.
+ * arguments, calls `getAsset()` on each argument, sorts all asset contexts and
+ * arguments, and invokes the callback function passed when complete.
  *
  * @since 1.0.0
  *
@@ -350,11 +350,11 @@ const getAssets = (
 
       for (let i: number = 0, len: number = args.length; i < len; i++) {
         if (hasExtension(args[i])) {
-          getAsset(args[i]);
-
           if (!hasAssets) {
             hasAssets = true;
           }
+
+          getAsset(args[i]);
         }
       }
     }
@@ -367,6 +367,16 @@ const getAssets = (
   depth--;
 
   if (!depth) {
+    contexts = sortContexts(Object.keys(assets) as AssetContext[]);
+
+    if (contexts.length > 1) {
+      hasContexts = true;
+    }
+
+    for (let i: number = 0, len: number = contexts.length; i < len; i++) {
+      assets[contexts[i]] = sortAssets(assets[contexts[i]]!);
+    }
+
     fn();
   }
 };
@@ -449,6 +459,8 @@ const showDialog = (fn: (data: any) => void): void => {
   const handleSave = (): void => {
     dialog.close();
 
+    renameAssets = renameCheckbox.value;
+
     const resImg: ResponsiveImage = {
       altText: ``,
       fileName: docName,
@@ -457,7 +469,7 @@ const showDialog = (fn: (data: any) => void): void => {
     };
 
     if (!!altTextInput.text) {
-      resImg.altText = altTextInput.text;
+      resImg.altText = altTextInput.text.trim();
     }
 
     if (!!fileNameInput.text) {
@@ -539,11 +551,8 @@ const showDialog = (fn: (data: any) => void): void => {
   altTextInput.helpTip = `Add the image's alt text`;
 
   const contextInputs: Partial<Record<AssetContext, any>> = {};
-  const contexts: AssetContext[] = sortContexts(
-    Object.keys(assets) as AssetContext[]
-  );
 
-  if (contexts.length > 1) {
+  if (hasContexts) {
     const contextPanel: any = dialog.add(
       `panel`,
       undefined,
@@ -580,9 +589,16 @@ const showDialog = (fn: (data: any) => void): void => {
 
       contextInputs[contexts[i]] = contextInput;
     }
-
-    hasContexts = true;
   }
+
+  const renameCheckbox: any = dialog.add(
+    "checkbox",
+    undefined,
+    "Rename Image Assets"
+  );
+  renameCheckbox.alignment = `fill`;
+  renameCheckbox.helpTip = `Rename image assets as Photoshop document's name`;
+  renameCheckbox.value = renameAssets;
 
   const btnGroup: any = dialog.add(`group`);
 
@@ -645,6 +661,8 @@ const sortAssets = (arr: Asset[]): Asset[] => {
     if (uniqueDefs.indexOf(sortedArr[i].def) === -1) {
       uniqueDefs.push(sortedArr[i].def);
       uniqueSortedArr.push(sortedArr[i]);
+    } else {
+      uniqueSortedArr[uniqueDefs.indexOf(sortedArr[i].def)] = sortedArr[i];
     }
   }
 
@@ -668,7 +686,7 @@ const sortAssets = (arr: Asset[]): Asset[] => {
  * // => [`s`, `l`, `xl`]
  */
 const sortContexts = (arr: AssetContext[]): AssetContext[] => {
-  const sortedContexts: Record<AssetContext, number> = {
+  const orderedContexts: Record<AssetContext, number> = {
     xs: 0,
     s: 1,
     m: 2,
@@ -677,7 +695,7 @@ const sortContexts = (arr: AssetContext[]): AssetContext[] => {
   };
 
   return arr.sort((a: AssetContext, b: AssetContext): number => {
-    return sortedContexts[a] - sortedContexts[b];
+    return orderedContexts[a] - orderedContexts[b];
   });
 };
 
@@ -743,6 +761,11 @@ const toNumber = (str: string): number => {
 const assets: Partial<Record<AssetContext, Asset[]>> = {};
 
 /**
+ * The gobal `contexts` array that stores the active document's sorted contexts.
+ */
+let contexts: AssetContext[] = [];
+
+/**
  * The default file name when generating a responsive image.
  */
 const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
@@ -752,6 +775,7 @@ const docName: string = app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``);
  */
 let hasAssets: boolean = false;
 let hasContexts: boolean = false;
+let renameAssets: boolean = false;
 
 // Invocation
 // =============================================================================
