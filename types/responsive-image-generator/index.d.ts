@@ -2,8 +2,13 @@
  * An asset object.
  */
 type Asset = {
-  def: number;
-  fileName: string;
+  context?: string;
+  def?: string;
+  ext: string;
+  int: number;
+  name: string;
+  qual?: string;
+  size?: string;
 };
 
 /**

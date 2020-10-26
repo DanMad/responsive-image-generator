@@ -155,7 +155,7 @@ const generateImgTag = (
   const contextualAssets: Asset[] = assets[contexts[0]]!;
 
   file.writeln(
-    `${tabs}  src="${resImg.srcDir}/${contextualAssets[0].fileName}"`
+    `${tabs}  src="${resImg.srcDir}/${getWebSafeFileName(contextualAssets[0])}"`
   );
 
   if (contextualAssets.length > 1) {
@@ -167,7 +167,10 @@ const generateImgTag = (
       i++
     ) {
       file.write(
-        `${tabs}    ${resImg.srcDir}/${contextualAssets[i].fileName} ${contextualAssets[i].def}x`
+        `${tabs}    ${resImg.srcDir}/${getWebSafeFileName(
+          contextualAssets[i],
+          true
+        )}`
       );
 
       if (i < len - 1) {
@@ -211,7 +214,10 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage): void => {
         i++
       ) {
         file.write(
-          `      ${resImg.srcDir}/${contextualAssets[i].fileName} ${contextualAssets[i].def}x`
+          `      ${resImg.srcDir}/${getWebSafeFileName(
+            contextualAssets[i],
+            true
+          )}`
         );
 
         if (i < len - 1) {
@@ -242,9 +248,68 @@ const generatePictureTag = (file: any, resImg: ResponsiveImage): void => {
  */
 const generateResponsiveImg = (resImg: ResponsiveImage): void => {
   if (renameAssets) {
+    for (let i: number = 0, len: number = contexts.length; i < len; i++) {
+      const contextualAssets: Asset[] = assets[contexts[i]]!;
+
+      for (
+        let i: number = 0, len: number = contextualAssets.length;
+        i < len;
+        i++
+      ) {
+        contextualAssets[i].name = docName;
+      }
+    }
+
+    scanLayers((layer) => {
+      const args: string[] = layer.name.split(`,`);
+
+      for (let i: number = 0, len: number = args.length; i < len; i++) {
+        let asset: Asset = getAsset(args[i]);
+        let newName: string = ``;
+
+        if (!!asset.size) {
+          newName += `${asset.size} `;
+        }
+
+        newName += docName;
+
+        if (!!asset.context) {
+          newName += `-${asset.context}`;
+        }
+
+        if (!!asset.def) {
+          newName += `-${asset.def}`;
+        }
+
+        newName += asset.ext;
+
+        if (!!asset.qual) {
+          newName += asset.qual;
+        }
+
+        args[i] = newName;
+      }
+
+      // The following statements resolve an intermittent bug that would prevent
+      // the Responsive Image Generator from overwriting the value of
+      // layer.name.
+      const tempLayer: any = app.activeDocument.artLayers.add();
+      tempLayer.remove();
+
+      layer.name = args.join(", ");
+    });
   }
 
   const docPath: string = app.activeDocument.path;
+
+  // The following statement is ignored as the Folder class is not native to
+  // JavaScript.
+  // @ts-ignore
+  const folder: any = Folder(`${docPath}/${docName}-assets`);
+
+  if (!folder.exists) {
+    folder.create();
+  }
 
   // The following statement is ignored as the default File class expects two
   // arguments, whereas Adobe® Photoshop's File class expects one argument:
@@ -270,115 +335,170 @@ const generateResponsiveImg = (resImg: ResponsiveImage): void => {
 };
 
 /**
- * Creates an `asset` object from the `str` argument passed and adds it to the
- * relevant context key of the global `assets` object.
+ * Creates an `asset` object from the `str` argument passed.
  *
  * @since 1.0.0
  *
  * @param {string} str The string to process.
- * @returns {void} This function doesn't have a return statement.
+ * @returns {Object} Returns an `asset` object.
  */
-const getAsset = (str: string): void => {
+const getAsset = (str: string): Asset => {
   const regExps: Record<Exclude<AssetParam, "name">, RegExp> = {
     context: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
-    def: /\-@?[1-9](\.\d+)?x?$/i,
+    def: /@?[1-9](\.\d+)?x?$/i,
     ext: /\.(gif|jpe?g|png)$/i,
     qual: /(([1-9]\d?|100)%|10|[1-9])$/,
-    size: /^\d{1,5}((\.\d{1,6})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)\s+/i,
+    size: /^\d{1,5}((\.\d{1,6})?%|([cm]m|in|px)?\s*?x\s*?\d{1,5}([cm]m|in|px)?)/i,
   };
 
-  let fileName: string = str.trim();
+  const asset: any = {};
+  let arg: string = str.trim();
 
-  if (regExps.size.test(fileName)) {
-    fileName = fileName.replace(regExps.size, ``);
+  if (regExps.size.test(arg)) {
+    asset.size = arg.match(regExps.size)![0];
+    arg = arg.replace(regExps.size, ``).trim();
   }
 
-  if (regExps.qual.test(fileName)) {
-    fileName = fileName.replace(regExps.qual, ``);
+  if (regExps.qual.test(arg)) {
+    asset.qual = arg.match(regExps.qual)![0];
+    arg = arg.replace(regExps.qual, ``).trim();
   }
 
-  const asset: any = {
-    fileName: fileName.replace(/\s+/g, `%20`),
-  };
+  asset.ext = arg.match(regExps.ext)![0];
+  arg = arg.replace(regExps.ext, ``).trim();
 
-  if (regExps.ext.test(fileName)) {
-    fileName = fileName.replace(regExps.ext, ``);
+  if (regExps.def.test(arg)) {
+    asset.def = arg.match(regExps.def)![0];
+    arg = arg
+      .replace(regExps.def, ``)
+      .replace(/[\-_]+$/, ``)
+      .trim();
   }
 
-  if (regExps.def.test(fileName)) {
-    asset.def = toNumber(fileName.match(regExps.def)![0]);
-    fileName = fileName.replace(regExps.def, ``);
+  if (!!asset.def) {
+    asset.int = toNumber(asset.def);
   } else {
-    asset.def = 1;
+    asset.int = 1;
   }
 
-  let context: AssetContext = `xs`;
-
-  if (regExps.context.test(fileName)) {
-    context = toContext(fileName.match(regExps.context)![0]);
+  if (regExps.context.test(arg)) {
+    asset.context = arg.match(regExps.context)![0];
+    arg = arg
+      .replace(regExps.context, ``)
+      .replace(/[\-_]+$/, ``)
+      .trim();
   }
 
-  if (!!assets[context]) {
-    assets[context]?.push(asset);
-  } else {
-    assets[context] = [asset];
-  }
+  asset.name = arg.trim();
+
+  return asset;
 };
 
 /**
- * Recursively searches the active document's layer tree for valid asset
- * arguments, calls `getAsset()` on each argument, sorts all asset contexts and
- * arguments, and invokes the callback function passed when complete.
+ * Gets all asset contexts and arguments from the active document, sorts all
+ * asset contexts and arguments, and invokes the callback function passed when
+ * complete.
  *
  * @since 1.0.0
  *
  * @param {Function} fn The callback function to invoke.
- * @param {Array} layers The layer tree to search.
- * @param {number} depth The depth of recursion.
  * @returns {void} This function doesn't have a return statement.
  */
-const getAssets = (
-  fn: () => void,
-  layers: any = app.activeDocument.layers,
-  depth: number = 0
-): void => {
-  depth++;
+const getAssets = (fn: () => void): void => {
+  scanLayers((layer) => {
+    if (!hasAssets) {
+      hasAssets = true;
+    }
 
-  for (let i: number = 0, len: number = layers.length; i < len; i++) {
-    if (hasExtension(layers[i].name)) {
-      const args: string[] = layers[i].name.split(`,`);
+    const args: string[] = layer.name.split(`,`);
 
-      for (let i: number = 0, len: number = args.length; i < len; i++) {
-        if (hasExtension(args[i])) {
-          if (!hasAssets) {
-            hasAssets = true;
-          }
+    for (let i: number = 0, len: number = args.length; i < len; i++) {
+      let asset: Asset = getAsset(args[i]);
+      let context: AssetContext;
 
-          getAsset(args[i]);
-        }
+      if (!!asset.context) {
+        context = toContext(asset.context);
+      } else {
+        context = `xs`;
+      }
+
+      if (!!assets[context]) {
+        assets[context]?.push(asset);
+      } else {
+        assets[context] = [asset];
       }
     }
+  });
 
-    if (isGroup(layers[i])) {
-      getAssets(fn, layers[i].layers, depth);
-    }
+  contexts = sortContexts(Object.keys(assets) as AssetContext[]);
+
+  if (contexts.length > 1) {
+    hasContexts = true;
   }
 
-  depth--;
-
-  if (!depth) {
-    contexts = sortContexts(Object.keys(assets) as AssetContext[]);
-
-    if (contexts.length > 1) {
-      hasContexts = true;
-    }
-
-    for (let i: number = 0, len: number = contexts.length; i < len; i++) {
-      assets[contexts[i]] = sortAssets(assets[contexts[i]]!);
-    }
-
-    fn();
+  for (let i: number = 0, len: number = contexts.length; i < len; i++) {
+    assets[contexts[i]] = sortAssets(assets[contexts[i]]!);
   }
+
+  fn();
+};
+
+/**
+ * Creates a web safe file name from the `asset` object's properties, as well as
+ * the file's x-descriptor if `isSrcSetRef` is set to `true`.
+ *
+ * @since 1.1.0
+ *
+ * @param {Object} asset The object to get the web safe file's arguments from.
+ * @param {boolean} isSrcSetRef The switch to determine if an x-descriptor
+ * should be included as well.
+ * @returns {string} Returns the web safe file name, as well as the file's
+ * x-descriptor if `isSrcSetRef` is set to `true`.
+ *
+ * @example
+ * const monaLisa = {
+ *   context: `large`,
+ *   ext: `.jpg`,
+ *   int: 1,
+ *   name: `mona lisa`
+ * };
+ * const monaLisaAtTwoTimes = {
+ *   context: `sml`,
+ *   def: `@2x`,
+ *   ext: `.jpeg`,
+ *   int: 2,
+ *   name: `mona lisa`
+ * };
+ *
+ * getWebSafeFileName(monaLisa);
+ * // => 'mona%20lisa-large.jpg'
+ *
+ * getWebSafeFileName(monaLisaAtTwoTimes, true);
+ * // => 'mona%20lisa-sml-@2x.jpeg 2x'
+ */
+const getWebSafeFileName = (
+  asset: Asset,
+  isSrcSetRef: boolean = false
+): string => {
+  let fileName: string = ``;
+
+  fileName += asset.name.replace(/\s/g, `%20`);
+
+  if (!!asset.context) {
+    fileName += `-${asset.context}`;
+  }
+
+  if (!!asset.def) {
+    fileName += `-${asset.def}`;
+  }
+
+  fileName += asset.ext;
+
+  if (isSrcSetRef) {
+    fileName += ` ${asset.int}x`;
+  }
+
+  return fileName;
 };
 
 /**
@@ -440,6 +560,31 @@ const hasExtension = (
  */
 const isGroup = (layer: any): boolean => {
   return layer.typename === `LayerSet`;
+};
+
+/**
+ * Recursively scans the layer tree of the `layers` argument and invokes the
+ * callback function passed for each layer that has a valid asset argument.
+ *
+ * @since 1.1.0
+ *
+ * @param {Function} fn The callback function to invoke.
+ * @param {Array} layers The layer tree to scan.
+ * @returns {void} This function doesn't have a return statement.
+ */
+const scanLayers = (
+  fn: (layer: any) => void,
+  layers: any = app.activeDocument.layers
+): void => {
+  for (let i: number = 0, len: number = layers.length; i < len; i++) {
+    if (hasExtension(layers[i].name)) {
+      fn(layers[i]);
+    }
+
+    if (isGroup(layers[i])) {
+      scanLayers(fn, layers[i].layers);
+    }
+  }
 };
 
 /**
@@ -617,52 +762,52 @@ const showDialog = (fn: (data: any) => void): void => {
 };
 
 /**
- * Creates a new, sorted array of assets. Assets are sorted by their `def` key
+ * Creates a new, sorted array of assets. Assets are sorted by their `int` key
  * from lowest to highest number, and only included in the new, sorted array if
- * the `def` key is a unique number. If two assets's `def` keys are the same
+ * the `int` key is a unique number. If two assets's `int` keys are the same
  * number, the asset declared later in the active document will take precedence.
  *
  * @since 1.0.0
  *
  * @param {Array} arr The array to sort.
- * @returns {Array} Returns a new, sorted array of assets with unique `def` keys.
+ * @returns {Array} Returns a new, sorted array of assets with unique `int` keys.
  *
  * @example
  * const xs = [
- *   {def: 1, fileName: `foo.jpg`},
- *   {def: 1.5, fileName: `bar.jpg`},
- *   {def: 1, fileName: `baz.jpg`},
+ *   {int: 1, name: `foo.jpg`},
+ *   {int: 1.5, name: `bar.jpg`},
+ *   {int: 1, name: `baz.jpg`},
  * ]
  *
  * const s = [
- *   {def: 1, fileName: `foo.png`},
- *   {def: 1, fileName: `bar.png`},
- *   {def: 2, fileName: `baz.png`}
+ *   {int: 1, name: `foo.png`},
+ *   {int: 1, name: `bar.png`},
+ *   {int: 2, name: `baz.png`}
  * ];
  *
  * sortAssets(xs);
- * // => `[{def: 1, fileName: `baz.jpg`}, {def: 1.5, fileName: `bar.jpg`}]`
+ * // => `[{int: 1, name: `baz.jpg`}, {int: 1.5, name: `bar.jpg`}]`
  *
  * sortAssets(s);
- * // => `[{def: 1, fileName: `bar.png`}, {def: 2, fileName: `baz.png`}]`
+ * // => `[{int: 1, name: `bar.png`}, {int: 2, name: `baz.png`}]`
  */
 const sortAssets = (arr: Asset[]): Asset[] => {
   const sortedArr: Asset[] = arr.sort((a: Asset, b: Asset): number => {
-    if (a.def < b.def) {
+    if (a.int < b.int) {
       return -1;
     }
 
     return 1;
   });
-  const uniqueDefs: number[] = [];
+  const uniqueInts: number[] = [];
   const uniqueSortedArr: Asset[] = [];
 
   for (let i: number = 0, len: number = sortedArr.length; i < len; i++) {
-    if (uniqueDefs.indexOf(sortedArr[i].def) === -1) {
-      uniqueDefs.push(sortedArr[i].def);
+    if (uniqueInts.indexOf(sortedArr[i].int) === -1) {
+      uniqueInts.push(sortedArr[i].int);
       uniqueSortedArr.push(sortedArr[i]);
     } else {
-      uniqueSortedArr[uniqueDefs.indexOf(sortedArr[i].def)] = sortedArr[i];
+      uniqueSortedArr[uniqueInts.indexOf(sortedArr[i].int)] = sortedArr[i];
     }
   }
 
