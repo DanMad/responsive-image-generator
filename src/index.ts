@@ -4,7 +4,7 @@
 /**
  * The default max-width values for each asset context's breakpoint.
  */
-const CONTEXT_MAX_WIDTHS: Record<AssetContext, number> = {
+const CONTEXT_MAX_WIDTHS: Readonly<Record<AssetContext, number>> = {
   l: 1280,
   m: 768,
   s: 480,
@@ -16,7 +16,7 @@ const CONTEXT_MAX_WIDTHS: Record<AssetContext, number> = {
  * The default src directory that assets will be referenced from in the
  * responsive image snippet.
  */
-const SRC_DIR: string = `/images`;
+const SRC_DIR: Readonly<string> = `/images`;
 
 // ES3 Polyfills
 // =============================================================================
