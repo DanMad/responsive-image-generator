@@ -1,2 +1,26 @@
+# Artwork
+*.fig
+*.psd
+*.sketch
+
+# Dependencies
+node_modules
+
 # Distributed version
 dist
+
+# Ignore files
+.gitignore
+.prettierignore
+
+# Images
+images
+
+# License
+LICENSE
+
+# MacOS
+.DS_Store
+
+# Package files
+package-lock.json
