@@ -5,7 +5,6 @@ type Asset = {
   context?: string;
   def?: string;
   ext: string;
-  int: number;
   name: string;
   qual?: string;
   size?: string;
@@ -22,11 +21,13 @@ type AssetContext = "l" | "m" | "s" | "xl" | "xs";
 type AssetParam = "ext" | "context" | "def" | "name" | "qual" | "size";
 
 /**
- * A responsive image.
+ * All necessary responsive image information.
  */
-type ResponsiveImage = {
-  altText: string;
-  fileName: string;
-  maxWidths: Partial<Record<AssetContext, number>>;
-  srcDir: string;
+type ResponsiveImageInfo = {
+  assets: Partial<Record<AssetContext, Asset[]>>;
+  contexts: AssetContext[];
+  dialog: any;
+  docName: string;
+  layers: any[];
+  path: string;
 };
