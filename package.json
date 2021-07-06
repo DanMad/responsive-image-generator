@@ -1,26 +1,11 @@
 {
   "name": "responsive-image-generator",
-  "displayName": "Responsive Image Generator",
   "version": "1.1.0",
   "private": "true",
   "description": "A plugin to extend Adobe® Photoshop's Generate Image Assets feature.",
-  "keywords": [
-    "Adobe",
-    "Assets",
-    "Generate Image Assets",
-    "HTML",
-    "Photoshop",
-    "Responsive image",
-    "Script"
-  ],
-  "homepage": "https://github.com/danmad/responsive-image-generator#readme",
-  "bugs": {
-    "url": "https://github.com/danmad/responsive-image-generator/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/danmad/responsive-image-generator"
-  },
+  "homepage": "https://github.com/DanMad/responsive-image-generator#readme",
+  "bugs": "https://github.com/DanMad/responsive-image-generator/issues",
+  "repository": "https://github.com/DanMad/responsive-image-generator.git",
   "license": "MIT",
   "author": "DanMad",
   "scripts": {
