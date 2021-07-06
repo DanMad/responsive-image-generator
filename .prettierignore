@@ -9,9 +9,11 @@ node_modules
 # Distributed version
 dist
 
+# Hidden directories
+.*/**
+
 # Ignore files
-.gitignore
-.prettierignore
+.*ignore
 
 # Images
 images
@@ -23,7 +25,10 @@ LICENSE
 .DS_Store
 
 # Package files
-package-lock.json
+yarn.lock
 
 # Readme
 README.md
+
+# Run Command files
+.*rc
