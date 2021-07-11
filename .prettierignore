@@ -1,12 +1,7 @@
-# Artwork
-*.fig
-*.psd
-*.sketch
-
 # Dependencies
-node_modules
+node_modules/
 
-# Distributed version
+# Distribution directory
 dist
 
 # Hidden directories
@@ -15,19 +10,23 @@ dist
 # Ignore files
 .*ignore
 
-# Images
-images
+# Images directory
+images/
 
 # License
 LICENSE
 
-# MacOS
+# Log files
+*.log
+
+# Operating System
 .DS_Store
+Thumbs.db
 
 # Package files
 yarn.lock
 
-# Readme
+# Readme file
 README.md
 
 # Run Command files
