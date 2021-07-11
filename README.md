@@ -128,4 +128,4 @@ If you encounter any bugs, please [post an issue](https://github.com/DanMad/resp
 
 ## Contributing
 
-Contributions are more than welcome. Ensure you read through the [contributing guidelines](https://github.com/DanMad/responsive-image-generator/blob/master/CONTRIBUTING.md) before submitting a pull request.
+Contributions are more than welcome. Ensure you read through the [contributing guidelines](https://github.com/DanMad/responsive-image-generator/blob/main/CONTRIBUTING.md) before submitting a pull request.
