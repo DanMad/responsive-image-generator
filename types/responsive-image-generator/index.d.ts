@@ -13,12 +13,12 @@ type Asset = {
 /**
  * The argments of the context parameter.
  */
-type AssetContext = "l" | "m" | "s" | "xl" | "xs";
+type AssetContext = 'l' | 'm' | 's' | 'xl' | 'xs';
 
 /**
  * The parameters of an asset.
  */
-type AssetParam = "ext" | "context" | "def" | "name" | "qual" | "size";
+type AssetParam = 'ext' | 'context' | 'def' | 'name' | 'qual' | 'size';
 
 /**
  * All necessary responsive image information.

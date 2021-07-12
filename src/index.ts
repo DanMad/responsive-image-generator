@@ -1,7 +1,7 @@
 // Constants
 // =============================================================================
 
-const ASSET_EXTENSIONS: Readonly<string[]> = [`gif`, `jpe?g`, `png`];
+const ASSET_EXTENSIONS: Readonly<string[]> = ['gif', 'jpe?g', 'png'];
 const CONTEXT_MAX_WIDTHS: Readonly<Record<AssetContext, number>> = {
   l: 1280,
   m: 768,
@@ -10,26 +10,26 @@ const CONTEXT_MAX_WIDTHS: Readonly<Record<AssetContext, number>> = {
   xs: 320,
 };
 const SELF_CLOSING_TAGS: Readonly<string[]> = [
-  `area`,
-  `base`,
-  `br`,
-  `col`,
-  `command`,
-  `embed`,
-  `hr`,
-  `img`,
-  `input`,
-  `keygen`,
-  `link`,
-  `meta`,
-  `param`,
-  `source`,
-  `track`,
-  `wbr`,
+  'area',
+  'base',
+  'br',
+  'col',
+  'command',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'keygen',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
 ];
 const RENAME_ASSETS: boolean = false;
-const SRC_DIR: string = `/images`;
-const TAB_CHAR: string = `  `;
+const SRC_DIR: string = '/images';
+const TAB_CHAR: string = '  ';
 
 // ES3 Polyfills
 // =============================================================================
@@ -41,12 +41,12 @@ const TAB_CHAR: string = `  `;
 if (!Array.prototype.indexOf) {
   Array.prototype.indexOf = function (
     searchElement: Readonly<any>,
-    fromIndex?: any
+    fromIndex?: any,
   ): number {
     let k: number;
 
     if (this == null) {
-      alert(`Error: Array.prototype.indexOf()\n"this" is null or undefined.`);
+      alert('Error: Array.prototype.indexOf()\n"this" is null or undefined.');
     }
 
     const o: Readonly<any> = Object(this);
@@ -84,24 +84,24 @@ if (!Object.keys) {
       Object.prototype.hasOwnProperty;
     const hasDontEnumBug: Readonly<boolean> = !{
       toString: null,
-    }.propertyIsEnumerable(`toString`);
+    }.propertyIsEnumerable('toString');
     const dontEnums: Readonly<string[]> = [
-      `toString`,
-      `toLocaleString`,
-      `valueOf`,
-      `hasOwnProperty`,
-      `isPrototypeOf`,
-      `propertyIsEnumerable`,
-      `constructor`,
+      'toString',
+      'toLocaleString',
+      'valueOf',
+      'hasOwnProperty',
+      'isPrototypeOf',
+      'propertyIsEnumerable',
+      'constructor',
     ];
     const dontEnumsLength: Readonly<number> = dontEnums.length;
 
     return function (obj: Readonly<any>): string[] {
       if (
-        typeof obj !== `function` &&
-        (typeof obj !== `object` || obj === null)
+        typeof obj !== 'function' &&
+        (typeof obj !== 'object' || obj === null)
       ) {
-        alert(`Error: Object.keys()\nCalled on a non-object.`);
+        alert('Error: Object.keys()\nCalled on a non-object.');
       }
 
       const result: string[] = [];
@@ -131,7 +131,7 @@ if (!Object.keys) {
  */
 if (!String.prototype.trim) {
   String.prototype.trim = function (): string {
-    return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ``);
+    return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
   };
 }
 
@@ -157,25 +157,25 @@ if (!String.prototype.trim) {
  */
 const hasExtension = (
   str: Readonly<string>,
-  types: Readonly<string[]> = ASSET_EXTENSIONS
+  types: Readonly<string[]> = ASSET_EXTENSIONS,
 ): boolean => {
   if (!types.length) {
     return false;
   }
 
-  let regExp: string = `\\.(`;
+  let regExp: string = '\\.(';
 
   for (let i: number = 0, len: number = types.length; i < len; i++) {
     regExp += types[i].trim();
 
     if (i < len - 1) {
-      regExp += `|`;
+      regExp += '|';
     } else {
-      regExp += `)`;
+      regExp += ')';
     }
   }
 
-  return new RegExp(regExp, `i`).test(str);
+  return new RegExp(regExp, 'i').test(str);
 };
 
 /**
@@ -188,11 +188,11 @@ const hasExtension = (
  */
 const renameAssets = (_: ResponsiveImageInfo): void => {
   scanLayers((layer) => {
-    const args: string[] = layer.name.split(`,`);
+    const args: string[] = layer.name.split(',');
 
     for (let i: number = 0, len: number = args.length; i < len; i++) {
       const asset: Readonly<Asset> = toAsset(args[i]);
-      let name: string = ``;
+      let name: string = '';
 
       if (!!asset.size) {
         name += `${asset.size} `;
@@ -223,7 +223,7 @@ const renameAssets = (_: ResponsiveImageInfo): void => {
     const tempLayer: any = app.activeDocument.artLayers.add();
     tempLayer.remove();
 
-    layer.name = args.join(`, `);
+    layer.name = args.join(', ');
   }, _.layers);
 
   for (let i: number = 0, len: number = _.contexts.length; i < len; i++) {
@@ -247,14 +247,14 @@ const renameAssets = (_: ResponsiveImageInfo): void => {
  */
 const scanLayers = (
   fn: (layer: any) => void,
-  layers: Readonly<any[]>
+  layers: Readonly<any[]>,
 ): void => {
   for (let i: number = 0, len: number = layers.length; i < len; i++) {
     if (hasExtension(layers[i].name)) {
       fn(layers[i]);
     }
 
-    if (layers[i].typename === `LayerSet`) {
+    if (layers[i].typename === 'LayerSet') {
       scanLayers(fn, layers[i].layers);
     }
   }
@@ -272,7 +272,7 @@ const scanLayers = (
  */
 const showDialog = (
   fn: (_: ResponsiveImageInfo) => void,
-  _: ResponsiveImageInfo
+  _: ResponsiveImageInfo,
 ): void => {
   const handleCancel = (): void => {
     dialog.close();
@@ -303,7 +303,7 @@ const showDialog = (
       ) {
         if (!!contextInputs[_.contexts[i]].text) {
           _.dialog.maxWidths[_.contexts[i]] = toNumber(
-            contextInputs[_.contexts[i]].text
+            contextInputs[_.contexts[i]].text,
           );
         } else {
           _.dialog.maxWidths[_.contexts[i]] = CONTEXT_MAX_WIDTHS[_.contexts[i]];
@@ -319,114 +319,115 @@ const showDialog = (
   // expect any arguments, but Adobe® Photoshop's `Window` class expects two
   // arguments.
   // @ts-ignore
-  const dialog: any = new Window(`dialog`, `Generate Responsive Image`);
+  const dialog: any = new Window('dialog', 'Generate Responsive Image');
 
   dialog.margins = 16;
 
   const generalPanel: any = dialog.add(
-    `panel`,
+    'panel',
     undefined,
-    `General Information`
+    'General Information',
   );
 
-  generalPanel.alignment = `fill`;
+  generalPanel.alignment = 'fill';
   generalPanel.margins = 16;
   generalPanel.spacing = 12;
 
-  const fileNameGroup: any = generalPanel.add(`group`);
+  const fileNameGroup: any = generalPanel.add('group');
 
-  fileNameGroup.add(`statictext`, undefined, `File Name`);
-  fileNameGroup.alignment = `right`;
+  fileNameGroup.add('statictext', undefined, 'File Name');
+  fileNameGroup.alignment = 'right';
   fileNameGroup.spacing = 0;
 
   const fileNameInput: any = fileNameGroup.add(
-    `edittext`,
+    'edittext',
     undefined,
-    _.docName
+    _.docName,
   );
 
   fileNameInput.characters = 16;
-  fileNameInput.helpTip = `Add the image's file name`;
+  fileNameInput.helpTip = "Add the image's file name";
 
   const srcDirGroup: any = generalPanel.add(`group`);
 
-  srcDirGroup.add(`statictext`, undefined, `Src Directory`);
-  srcDirGroup.alignment = `right`;
+  srcDirGroup.add('statictext', undefined, 'Src Directory');
+  srcDirGroup.alignment = 'right';
   srcDirGroup.spacing = 0;
 
-  const srcDirInput: any = srcDirGroup.add(`edittext`, undefined, SRC_DIR);
+  const srcDirInput: any = srcDirGroup.add('edittext', undefined, SRC_DIR);
 
   srcDirInput.characters = 16;
-  srcDirInput.helpTip = `Add the image's src directory`;
+  srcDirInput.helpTip = "Add the image's src directory";
 
-  const altTextGroup: any = generalPanel.add(`group`);
+  const altTextGroup: any = generalPanel.add('group');
 
-  altTextGroup.add(`statictext`, undefined, `Alt Text`);
-  altTextGroup.alignment = `right`;
+  altTextGroup.add(`statictext`, undefined, 'Alt Text');
+  altTextGroup.alignment = 'right';
   altTextGroup.spacing = 0;
 
-  const altTextInput: any = altTextGroup.add(`edittext`);
+  const altTextInput: any = altTextGroup.add('edittext');
 
   altTextInput.active = true;
   altTextInput.characters = 16;
-  altTextInput.helpTip = `Add the image's alt text`;
+  altTextInput.helpTip = "Add the image's alt text";
 
   const contextInputs: Partial<Record<AssetContext, any>> = {};
 
   if (_.contexts.length > 1) {
     const contextualPanel: any = dialog.add(
-      `panel`,
+      'panel',
       undefined,
-      `Contextual Information`
+      'Contextual Information',
     );
 
-    contextualPanel.alignment = `fill`;
+    contextualPanel.alignment = 'fill';
     contextualPanel.margins = 16;
     contextualPanel.spacing = 12;
 
     for (let i: number = 0, len: number = _.contexts.length; i < len - 1; i++) {
-      const contextGroup: any = contextualPanel.add(`group`);
+      const contextGroup: any = contextualPanel.add('group');
 
       contextGroup.add(
-        `statictext`,
+        'statictext',
         undefined,
-        `${_.contexts[i].toUpperCase()}:`
+        `${_.contexts[i].toUpperCase()}:`,
       );
-      contextGroup.alignment = `right`;
+      contextGroup.alignment = 'right';
       contextGroup.spacing = 0;
 
       const contextInput: any = contextGroup.add(
-        `edittext`,
+        'edittext',
         undefined,
-        `${CONTEXT_MAX_WIDTHS[_.contexts[i]]}px`
+        `${CONTEXT_MAX_WIDTHS[_.contexts[i]]}px`,
       );
 
       contextInput.characters = 16;
-      contextInput.helpTip = `Add the context's max-width`;
+      contextInput.helpTip = "Add the context's max-width";
       contextInputs[_.contexts[i]] = contextInput;
     }
   }
 
   const renameAssetsCheckbox: any = dialog.add(
-    `checkbox`,
+    'checkbox',
     undefined,
-    `Rename Image Assets`
+    'Rename Image Assets',
   );
 
-  renameAssetsCheckbox.alignment = `fill`;
-  renameAssetsCheckbox.helpTip = `Rename image assets as Photoshop document's name`;
+  renameAssetsCheckbox.alignment = 'fill';
+  renameAssetsCheckbox.helpTip =
+    "Rename image assets as Photoshop document's name";
   renameAssetsCheckbox.value = RENAME_ASSETS;
 
-  const actionsGroup: any = dialog.add(`group`);
+  const actionsGroup: any = dialog.add('group');
 
-  actionsGroup.alignment = `right`;
+  actionsGroup.alignment = 'right';
   actionsGroup.spacing = 0;
 
-  const cancelBtn: any = actionsGroup.add(`button`, undefined, `Cancel`);
+  const cancelBtn: any = actionsGroup.add('button', undefined, 'Cancel');
 
   cancelBtn.onClick = handleCancel;
 
-  const saveBtn: any = actionsGroup.add(`button`, undefined, `Save`);
+  const saveBtn: any = actionsGroup.add('button', undefined, 'Save');
 
   saveBtn.onClick = handleSave;
   dialog.show();
@@ -465,15 +466,13 @@ const showDialog = (
  * // => `[{name: `bar.png`}, {def: `@2x`, name: `baz.png`}]`
  */
 const sortAssets = (arr: Asset[]): Asset[] => {
-  arr.sort(
-    (a: Readonly<Asset>, b: Readonly<Asset>): Readonly<number> => {
-      if (toNumber(a.def) < toNumber(b.def)) {
-        return -1;
-      }
-
-      return 1;
+  arr.sort((a: Readonly<Asset>, b: Readonly<Asset>): Readonly<number> => {
+    if (toNumber(a.def) < toNumber(b.def)) {
+      return -1;
     }
-  );
+
+    return 1;
+  });
 
   const indexes: number[] = [];
   const uniqueArr: Asset[] = [];
@@ -519,10 +518,10 @@ const sortContexts = (arr: AssetContext[]): AssetContext[] => {
   return arr.sort(
     (
       a: Readonly<AssetContext>,
-      b: Readonly<AssetContext>
+      b: Readonly<AssetContext>,
     ): Readonly<number> => {
       return sortOrder[a] - sortOrder[b];
-    }
+    },
   );
 };
 
@@ -535,7 +534,7 @@ const sortContexts = (arr: AssetContext[]): AssetContext[] => {
  * @returns {Object} Returns an `asset` object.
  */
 const toAsset = (str: string): Asset => {
-  const regExps: Readonly<Record<Exclude<AssetParam, "name">, RegExp>> = {
+  const regExps: Readonly<Record<Exclude<AssetParam, 'name'>, RegExp>> = {
     context: /(m(ed(ium)?)?|(e?x(tra)?-*)?(s(m(al)?l)?|l((ar)?ge)?))$/i,
     def: /@?[1-9](\.\d+)?x?$/i,
     ext: /\.(gif|jpe?g|png)$/i,
@@ -548,30 +547,30 @@ const toAsset = (str: string): Asset => {
 
   if (regExps.size.test(subStr)) {
     asset.size = subStr.match(regExps.size)![0];
-    subStr = subStr.replace(regExps.size, ``).trim();
+    subStr = subStr.replace(regExps.size, '').trim();
   }
 
   if (regExps.qual.test(subStr)) {
     asset.qual = subStr.match(regExps.qual)![0];
-    subStr = subStr.replace(regExps.qual, ``).trim();
+    subStr = subStr.replace(regExps.qual, '').trim();
   }
 
   asset.ext = subStr.match(regExps.ext)![0];
-  subStr = subStr.replace(regExps.ext, ``).trim();
+  subStr = subStr.replace(regExps.ext, '').trim();
 
   if (regExps.def.test(subStr)) {
     asset.def = subStr.match(regExps.def)![0];
     subStr = subStr
-      .replace(regExps.def, ``)
-      .replace(/[\-_]+$/, ``)
+      .replace(regExps.def, '')
+      .replace(/[\-_]+$/, '')
       .trim();
   }
 
   if (regExps.context.test(subStr)) {
     asset.context = subStr.match(regExps.context)![0];
     subStr = subStr
-      .replace(regExps.context, ``)
-      .replace(/[\-_]+$/, ``)
+      .replace(regExps.context, '')
+      .replace(/[\-_]+$/, '')
       .trim();
   }
 
@@ -596,18 +595,18 @@ const toAsset = (str: string): Asset => {
  * toContext(undefined);
  * // => `xs`
  */
-const toContext = (str: Readonly<string> = ``): AssetContext => {
+const toContext = (str: Readonly<string> = ''): AssetContext => {
   switch (true) {
     case /^l((ar)?ge)?$/i.test(str):
-      return `l`;
+      return 'l';
     case /^m(ed(ium)?)?$/i.test(str):
-      return `m`;
+      return 'm';
     case /^s(m(al)?l)?$/i.test(str):
-      return `s`;
+      return 's';
     case /^e?x(tra)?-*l((ar)?ge)?$/i.test(str):
-      return `xl`;
+      return 'xl';
     default:
-      return `xs`;
+      return 'xs';
   }
 };
 
@@ -627,7 +626,7 @@ const toContext = (str: Readonly<string> = ``): AssetContext => {
  * // => `  `
  */
 const toIndent = (tabs: Readonly<number>): string => {
-  let indent: string = ``;
+  let indent: string = '';
 
   for (let i: number = 0; i < tabs; i++) {
     indent += TAB_CHAR;
@@ -652,7 +651,7 @@ const toIndent = (tabs: Readonly<number>): string => {
  * toNumber(`@1.5x`);
  * // => 1.5
  */
-const toNumber = (str: Readonly<string> = ``): number => {
+const toNumber = (str: Readonly<string> = ''): number => {
   if (/\d/.test(str)) {
     return parseFloat(str.match(/\d+(\.\d+)?/)![0]);
   }
@@ -695,13 +694,13 @@ const toNumber = (str: Readonly<string> = ``): number => {
 const toWebSafeSrc = (
   asset: Asset,
   path: string,
-  isSrcSetRef: Readonly<boolean> = false
+  isSrcSetRef: Readonly<boolean> = false,
 ): string => {
-  let src: string = ``;
+  let src: string = '';
 
-  src += path.replace(/\s/g, `%20`);
-  src += `/`;
-  src += asset.name.replace(/\s/g, `%20`);
+  src += path.replace(/\s/g, '%20');
+  src += '/';
+  src += asset.name.replace(/\s/g, '%20');
 
   if (!!asset.context) {
     src += `-${asset.context}`;
@@ -734,13 +733,13 @@ const writeAssets = (fn: (_: ResponsiveImageInfo) => void): void => {
     assets: {},
     contexts: [],
     dialog: {},
-    docName: app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ``),
+    docName: app.activeDocument.name.replace(/\.[a-z]{3,4}$/i, ''),
     layers: app.activeDocument.layers,
     path: app.activeDocument.path,
   };
 
   scanLayers((layer) => {
-    const args: string[] = layer.name.split(`,`);
+    const args: string[] = layer.name.split(',');
 
     for (let i: number = 0, len: number = args.length; i < len; i++) {
       const asset: Readonly<Asset> = toAsset(args[i]);
@@ -778,23 +777,23 @@ const writeAttr = (
   file: any,
   key: string,
   value: string | string[],
-  tabs: Readonly<number> = 0
+  tabs: Readonly<number> = 0,
 ): void => {
   file.write(`${toIndent(tabs)}${key.trim()}="`);
 
-  if (typeof value === `string`) {
+  if (typeof value === 'string') {
     file.write(`${value.trim()}"\r\n`);
   } else {
-    file.write(`\r\n`);
+    file.write('\r\n');
 
     for (let i = 0, len = value.length; i < len; i++) {
       file.write(`${toIndent(tabs + 1)}${value[i].trim()}`);
 
       if (i < len - 1) {
-        file.write(`,`);
+        file.write(',');
       }
 
-      file.write(`\r\n`);
+      file.write('\r\n');
     }
 
     file.write(`${toIndent(tabs)}"\r\n`);
@@ -816,27 +815,27 @@ const writeTag = (
   fn: (tabs: number) => void,
   file: any,
   tag: string,
-  tabs: Readonly<number> = 0
+  tabs: Readonly<number> = 0,
 ): void => {
   const TAG: Readonly<string> = tag.trim();
 
   file.write(`${toIndent(tabs)}<${TAG}`);
 
   if (SELF_CLOSING_TAGS.indexOf(TAG) === -1) {
-    file.write(`>`);
+    file.write('>');
   }
 
-  file.write(`\r\n`);
+  file.write('\r\n');
   fn(tabs + 1);
   file.write(toIndent(tabs));
 
   if (SELF_CLOSING_TAGS.indexOf(TAG) === -1) {
     file.write(`</${TAG}`);
   } else {
-    file.write(`/`);
+    file.write('/');
   }
 
-  file.write(`>\r\n`);
+  file.write('>\r\n');
 };
 
 /**
@@ -865,21 +864,21 @@ const writeHTML = (_: ResponsiveImageInfo): void => {
   // two arguments, but Adobe® Photoshop's `File` class expects one argument.
   // @ts-ignore
   const file: any = File(
-    `${_.path}/${_.docName}-assets/${_.dialog.fileName}.html`
+    `${_.path}/${_.docName}-assets/${_.dialog.fileName}.html`,
   );
 
   if (file.exists) {
     file.remove();
   }
 
-  file.encoding = `utf-8`;
-  file.open(`w`);
+  file.encoding = 'utf-8';
+  file.open('w');
 
   const writeImgTag = (file: any, tabs: Readonly<number> = 0) => {
     writeTag(
       (tabs) => {
         if (!!_.dialog.altText) {
-          writeAttr(file, `alt`, _.dialog.altText, tabs);
+          writeAttr(file, 'alt', _.dialog.altText, tabs);
         }
 
         const assets: Readonly<Asset[]> = _.assets[_.contexts[0]]!;
@@ -890,12 +889,12 @@ const writeHTML = (_: ResponsiveImageInfo): void => {
           srcset.push(toWebSafeSrc(assets[i], _.dialog.srcDir, true));
         }
 
-        writeAttr(file, `src`, src, tabs);
-        writeAttr(file, `srcset`, srcset, tabs);
+        writeAttr(file, 'src', src, tabs);
+        writeAttr(file, 'srcset', srcset, tabs);
       },
       file,
-      `img`,
-      tabs
+      'img',
+      tabs,
     );
   };
 
@@ -914,19 +913,19 @@ const writeHTML = (_: ResponsiveImageInfo): void => {
 
           writeTag(
             (tabs) => {
-              writeAttr(file, `media`, `(min-width: ${minWidth / 16}em)`, tabs);
-              writeAttr(file, `srcset`, srcset, tabs);
+              writeAttr(file, 'media', `(min-width: ${minWidth / 16}em)`, tabs);
+              writeAttr(file, 'srcset', srcset, tabs);
             },
             file,
-            `source`,
-            tabs
+            'source',
+            tabs,
           );
         }
 
         writeImgTag(file, tabs);
       },
       file,
-      `picture`
+      'picture',
     );
   } else {
     writeImgTag(file);
