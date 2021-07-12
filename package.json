@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "DanMad",
   "scripts": {
+    "bootstrap": "yarn install && husky install && chmod ug+x .husky/*",
     "build": "rm -rf dist && tsc --noEmit && yarn build:babel && yarn build:uglify",
     "build:babel": "babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
     "build:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx"
