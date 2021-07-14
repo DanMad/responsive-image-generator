@@ -2,7 +2,7 @@
 node_modules/
 
 # Distribution directory
-dist
+dist/
 
 # Hidden directories
 .*/**
@@ -10,8 +10,12 @@ dist
 # Ignore files
 .*ignore
 
-# Images directory
-images/
+# Image files
+*.gif
+*.ico
+*.jpg
+*.jpeg
+*.png
 
 # License
 LICENSE
@@ -25,9 +29,6 @@ Thumbs.db
 
 # Package files
 yarn.lock
-
-# Readme file
-README.md
 
 # Run Command files
 .*rc
