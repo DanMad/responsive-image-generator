@@ -124,7 +124,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
 
 ## Issues
 
-If you encounter any bugs, please [post an issue](https://github.com/DanMad/responsive-image-generator/issues).
+If you encounter any bugs, please [post an issue](https://github.com/DanMad/responsive-image-generator/issues/new).
 
 ## Contributing
 
