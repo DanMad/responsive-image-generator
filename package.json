@@ -5,7 +5,10 @@
   "description": "A plugin to extend Adobe® Photoshop's Generate Image Assets feature",
   "homepage": "https://github.com/DanMad/responsive-image-generator#readme",
   "bugs": "https://github.com/DanMad/responsive-image-generator/issues",
-  "repository": "https://github.com/DanMad/responsive-image-generator.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DanMad/responsive-image-generator.git"
+  },
   "license": "MIT",
   "author": "DanMad",
   "scripts": {
