@@ -15,7 +15,8 @@
     "bootstrap": "yarn install && husky install && chmod +x .husky/*",
     "build": "rm -rf dist && tsc --noEmit && yarn build:babel && yarn build:uglify",
     "build:babel": "babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
-    "build:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx"
+    "build:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx",
+    "format": "sort-package-json && prettier --write \"**/*\""
   },
   "devDependencies": {
     "@babel/cli": "^7.11.6",
