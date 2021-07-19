@@ -33,5 +33,5 @@ yarn.lock
 # Run Command files
 .*rc
 
-# Shell scripts
+# Script files
 *.sh
