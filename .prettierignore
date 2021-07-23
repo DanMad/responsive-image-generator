@@ -6,6 +6,7 @@ dist/
 
 # Hidden directories
 .*/**
+!.github/workflows/**
 
 # Ignore files
 .*ignore
