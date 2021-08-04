@@ -1,6 +1,6 @@
 {
   "name": "responsive-image-generator",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": "true",
   "description": "A plugin to extend Adobe® Photoshop's Generate Image Assets feature",
   "homepage": "https://github.com/DanMad/responsive-image-generator#readme",
