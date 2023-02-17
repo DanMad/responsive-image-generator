@@ -6,7 +6,7 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 
 ## Getting Started
 
-1. Download the [Responsive Image Generator](https://raw.githubusercontent.com/DanMad/responsive-image-generator/master/dist/responsive-image-generator.min.jsx).
+1. Download the [Responsive Image Generator](https://raw.githubusercontent.com/danmad/responsive-image-generator/resources/responsive-image-generator.min.jsx).
 2. Add the downloaded script to Photoshop's `Scripts` directory. The path to this directory is as follows:
 
    - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2023/Presets/Scripts`
@@ -18,7 +18,7 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 3. Open Photoshop and create a new, blank document (a document needs to be open to follow these next few steps).
 4. Navigate to `File > Scripts > Script Events Manager`. The `Script Events Manager` dialog should appear:
 
-   ![Adobe® Photoshop's Script Events Manager dialog](./images/getting-started-example-1.png)
+   ![Adobe® Photoshop's Script Events Manager dialog](https://github.com/danmad/responsive-image-generator/blob/resources/getting-started-example-1.png)
 
 5. Associate the `responsive-image-generator.min.jsx` script with the `Save Document` event by:
 
@@ -32,13 +32,13 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 
    The dialog should now look similar to this:
 
-   ![Adobe® Photoshop's Script Events Manager dialog with Responsive Image Generator installed](./images/getting-started-example-2.png)
+   ![Adobe® Photoshop's Script Events Manager dialog with Responsive Image Generator installed](https://github.com/danmad/responsive-image-generator/blob/resources/getting-started-example-2.png)
 
 6. Press `Done` and you're good to go!
 
 ## Usage
 
-Once you've successfully completed the [Installation](https://github.com/DanMad/responsive-image-generator#installation) instructions, saving your documents will call the Responsive Image Generator. If a document's layers contain asset names, then the Responsive Image Generator's dialog will appear.
+Once you've successfully completed the [Installation](https://github.com/danmad/responsive-image-generator#installation) instructions, saving your documents will call the Responsive Image Generator. If a document's layers contain asset names, then the Responsive Image Generator's dialog will appear.
 
 **Note:** The Responsive Image Generator is designed to extend Photoshop's _Generate Image Assets_ feature. Ensure that it's toggled on by checking `File > Generate > Image Assets` before saving each document you plan to generate responsive image snippets from.
 
@@ -46,11 +46,11 @@ Once you've successfully completed the [Installation](https://github.com/DanMad/
 
 Let's say we've just finished working on a document called `mona-lisa.psd` and it contains three assets we'd like to generate; `100x100 mona-lisa.jpg`, `200x200 mona-lisa-@2x.jpg` and `300x300 mona-lisa-@3x.jpg`:
 
-![Adobe® Photoshop's Layers panel](./images/usage-example-1.png)
+![Adobe® Photoshop's Layers panel](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-1.png)
 
 We're happy with our work, so we save our document and then the Responsive Image Generator's dialog appears, prompting us for the responsive image's `alt` text:
 
-![Responsive Image Generator's dialog](./images/usage-example-2.png)
+![Responsive Image Generator's dialog](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-2.png)
 
 **Note:** The Responsive Image Generator will name your snippet consistently with your Photoshop document's name and write each image's `src` directory as `/images` by default. Configure these if necessary, to meet your own requirements.
 
@@ -81,11 +81,11 @@ Then we'll group our orginal layer and include the additional six asset names wi
 8. `800x800 mona-lisa-lge-@2x.jpg`
 9. `1200x1200 mona-lisa-lge-@3x.jpg`
 
-![Adobe® Photoshop's Layers panel](./images/usage-example-3.png)
+![Adobe® Photoshop's Layers panel](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-3.png)
 
 This time, when we save our document, the Responsive Image Generator's dialog will appear with additional options so that you can also customise the responsive images breakpoints:
 
-![Responsive Image Generator's dialog](./images/usage-example-4.png)
+![Responsive Image Generator's dialog](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-4.png)
 
 As with the last example, we enter `"The Mona Lisa"` as `alt` text and press `Save`.
 
@@ -119,8 +119,8 @@ The snippet generated in this instance leverages the `picture` and `source` elem
 
 ## Issues
 
-If you encounter any bugs, please [post an issue](https://github.com/DanMad/responsive-image-generator/issues/new).
+If you encounter any bugs, please [post an issue](https://github.com/danmad/responsive-image-generator/issues/new).
 
 ## Contributing
 
-Contributions are more than welcome. Ensure you read through the [contributing guidelines](https://github.com/DanMad/responsive-image-generator/blob/main/CONTRIBUTING.md) before submitting a pull request.
+Contributions are more than welcome. Ensure you read through the [contributing guidelines](https://github.com/danmad/responsive-image-generator/blob/main/CONTRIBUTING.md) before submitting a pull request.
