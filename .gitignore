@@ -1,9 +1,12 @@
-# Dependencies
-node_modules/
+# Bundle
+# dist
 
-# Log files
+# Logs
 *.log
 
 # Operating System
 .DS_Store
 Thumbs.db
+
+# Packages
+node_modules

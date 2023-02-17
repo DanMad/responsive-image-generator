@@ -142,17 +142,16 @@ if (!String.prototype.trim) {
  * Checks if `str` contains a valid file extension.
  *
  * @since 1.0.0
- *
- * @param {string} str The string to check.
- * @param {Array} types The file types to check for.
- * @returns {boolean} Returns `true` if `str` contains a valid file extension
+ * @arg {string} str The string to check.
+ * @arg {Array} types The file types to check for.
+ * @return {boolean} Returns `true` if `str` contains a valid file extension
  * from the `types` array, else `false`.
- *
  * @example
- * hasExtension(`fileName.jpg`);
+ *
+ * hasExtension('fileName.jpg');
  * // => true
  *
- * hasExtension(`fileName.jpeg`, [`psd`]);
+ * hasExtension('fileName.jpeg', ['psd']);
  * // => false
  */
 const hasExtension = (
@@ -182,9 +181,8 @@ const hasExtension = (
  * Renames the active document's assets, as well any existing asset objects.
  *
  * @since 1.1.0
- *
- * @param {Object} _ The responsive image info.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Object} _ The responsive image info.
+ * @return {void} This function doesn't have a return statement.
  */
 const renameAssets = (_: ResponsiveImageInfo): void => {
   scanLayers((layer) => {
@@ -219,7 +217,7 @@ const renameAssets = (_: ResponsiveImageInfo): void => {
 
     // The following statements resolve an intermittent bug that would prevent
     // the Responsive Image Generator from overwriting the value of
-    // layer.name.
+    // `layer.name`.
     const tempLayer: any = app.activeDocument.artLayers.add();
     tempLayer.remove();
 
@@ -240,10 +238,9 @@ const renameAssets = (_: ResponsiveImageInfo): void => {
  * passed for each layer with a name that contains a valid asset argument.
  *
  * @since 1.1.0
- *
- * @param {Function} fn The callback function to invoke.
- * @param {Array} layers The layer tree to scan.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Function} fn The callback function to invoke.
+ * @arg {Array} layers The layer tree to scan.
+ * @return {void} This function doesn't have a return statement.
  */
 const scanLayers = (
   fn: (layer: any) => void,
@@ -265,10 +262,9 @@ const scanLayers = (
  * callback function passed when the `Save` button is pressed.
  *
  * @since 1.0.0
- *
- * @param {Function} fn The callback function to invoke.
- * @param {Object} _ The responsive image info.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Function} fn The callback function to invoke.
+ * @arg {Object} _ The responsive image info.
+ * @return {void} This function doesn't have a return statement.
  */
 const showDialog = (
   fn: (_: ResponsiveImageInfo) => void,
@@ -441,29 +437,28 @@ const showDialog = (
  * the same number, the asset with the greater array index will take precedence.
  *
  * @since 1.0.0
- *
- * @param {Array} arr The array to sort.
- * @returns {Array} Returns a new, sorted array of assets with unique `def`
+ * @arg {Array} arr The array to sort.
+ * @return {Array} Returns a new, sorted array of assets with unique `def`
  * keys.
- *
  * @example
+ *
  * const xs = [
- *   {name: `foo.jpg`},
- *   {def: `@1.5x`, name: `bar.jpg`},
- *   {name: `baz.jpg`},
+ *   {name: 'foo.jpg'},
+ *   {def: '@1.5x', name: 'bar.jpg'},
+ *   {name: 'baz.jpg'},
  * ]
  *
  * const s = [
- *   {name: `foo.png`},
- *   {name: `bar.png`},
- *   {def: `@2x`, name: `baz.png`}
+ *   {name: 'foo.png'},
+ *   {name: 'bar.png'},
+ *   {def: '@2x', name: 'baz.png'}
  * ];
  *
  * sortAssets(xs);
- * // => `[{name: `baz.jpg`}, {def: `@1.5x`, name: `bar.jpg`}]`
+ * // => [{name: 'baz.jpg'}, {def: '@1.5x', name: 'bar.jpg'}]
  *
  * sortAssets(s);
- * // => `[{name: `bar.png`}, {def: `@2x`, name: `baz.png`}]`
+ * // => [{name: 'bar.png'}, {def: '@2x', name: 'baz.png'}]
  */
 const sortAssets = (arr: Asset[]): Asset[] => {
   arr.sort((a: Readonly<Asset>, b: Readonly<Asset>): Readonly<number> => {
@@ -495,16 +490,15 @@ const sortAssets = (arr: Asset[]): Asset[] => {
  * Creates a new, sorted array of contexts.
  *
  * @since 1.0.0
- *
- * @param {Array} arr The array to sort.
- * @returns {Array} Returns a new, sorted array of contexts.
- *
+ * @arg {Array} arr The array to sort.
+ * @return {Array} Returns a new, sorted array of contexts.
  * @example
- * sortContexts([`l`, `m`, `xs`, `s`]);
- * // => [`xs`, `s`, `m`, `l`]
  *
- * sortContexts([`l`, `xl`, `s`]);
- * // => [`s`, `l`, `xl`]
+ * sortContexts(['l', 'm', 'xs', 's']);
+ * // => ['xs', 's', 'm', 'l']
+ *
+ * sortContexts(['l', 'xl', 's']);
+ * // => ['s', 'l', 'xl']
  */
 const sortContexts = (arr: AssetContext[]): AssetContext[] => {
   const sortOrder: Readonly<Record<AssetContext, number>> = {
@@ -529,9 +523,8 @@ const sortContexts = (arr: AssetContext[]): AssetContext[] => {
  * Creates an `asset` object from the `str` argument passed.
  *
  * @since 1.0.0
- *
- * @param {string} str The string to process.
- * @returns {Object} Returns an `asset` object.
+ * @arg {string} str The string to process.
+ * @return {Object} Returns an `asset` object.
  */
 const toAsset = (str: string): Asset => {
   const regExps: Readonly<Record<Exclude<AssetParam, 'name'>, RegExp>> = {
@@ -584,16 +577,15 @@ const toAsset = (str: string): Asset => {
  * corresponding t-shirt size cannot be determined.
  *
  * @since 1.0.0
- *
- * @param {string} str The string to check.
- * @returns {string} Returns the converted t-shirt size, else `'xs'`.
- *
+ * @arg {string} str The string to check.
+ * @return {string} Returns the converted t-shirt size, else `'xs'`.
  * @example
- * toContext(`Medium`);
+ *
+ * toContext('Medium');
  * // => `m`
  *
  * toContext(undefined);
- * // => `xs`
+ * // => 'xs'
  */
 const toContext = (str: Readonly<string> = ''): AssetContext => {
   switch (true) {
@@ -614,16 +606,15 @@ const toContext = (str: Readonly<string> = ''): AssetContext => {
  * Converts `tabs` to its corresponding amount of whitespace.
  *
  * @since 1.1.0
- *
- * @param {number} tabs The number of tabs to be converted.
- * @returns {string} Returns the corresponding amount of whitespace.
- *
+ * @arg {number} tabs The number of tabs to be converted.
+ * @return {string} Returns the corresponding amount of whitespace.
  * @example
+ *
  * toIndent(2);
- * // => `    `
+ * // => '    '
  *
  * toIndent(1);
- * // => `  `
+ * // => '  '
  */
 const toIndent = (tabs: Readonly<number>): string => {
   let indent: string = '';
@@ -639,16 +630,15 @@ const toIndent = (tabs: Readonly<number>): string => {
  * Converts the first series of digits contained in `str` to a number.
  *
  * @since 1.0.0
- *
- * @param {string} str The string to process.
- * @returns {number} Returns the first series of digits contained in `str`, else
+ * @arg {string} str The string to process.
+ * @return {number} Returns the first series of digits contained in `str`, else
  * `1`.
- *
  * @example
- * toNumber(`2`);
+ *
+ * toNumber('2');
  * // => 2
  *
- * toNumber(`@1.5x`);
+ * toNumber('@1.5x');
  * // => 1.5
  */
 const toNumber = (str: Readonly<string> = ''): number => {
@@ -664,32 +654,31 @@ const toNumber = (str: Readonly<string> = ''): number => {
  * `true` then the src's x-descriptor is also appended.
  *
  * @since 1.1.0
- *
- * @param {Object} asset The object to get the file name from.
- * @param {string} path The file path.
- * @param {boolean} isSrcSetRef The flag to determine if an x-descriptor should
+ * @arg {Object} asset The object to get the file name from.
+ * @arg {string} path The file path.
+ * @arg {boolean} isSrcSetRef The flag to determine if an x-descriptor should
  * be appended.
- * @returns {string} Returns the web safe src, as well as its x-descriptor if
+ * @return {string} Returns the web safe src, as well as its x-descriptor if
  * `isSrcSetRef` is set to `true`.
- *
  * @example
+ *
  * const monaLisa = {
- *   context: `large`,
- *   ext: `.jpg`,
- *   name: `mona lisa`
+ *   context: 'large',
+ *   ext: '.jpg',
+ *   name: 'mona lisa'
  * };
  * const monaLisaAtTwoTimes = {
- *   context: `sml`,
- *   def: `@2x`,
- *   ext: `.jpeg`,
- *   name: `mona lisa`
+ *   context: 'sml',
+ *   def: '@2x',
+ *   ext: '.jpeg',
+ *   name: 'mona lisa'
  * };
  *
- * toWebSafeSrc(monaLisa, `images`);
- * // => `images/mona%20lisa-large.jpg`
+ * toWebSafeSrc(monaLisa, 'images');
+ * // => 'images/mona%20lisa-large.jpg'
  *
- * toWebSafeSrc(monaLisaAtTwoTimes, `images`, true);
- * // => `images/mona%20lisa-sml-@2x.jpeg 2x`
+ * toWebSafeSrc(monaLisaAtTwoTimes, 'images', true);
+ * // => 'images/mona%20lisa-sml-@2x.jpeg 2x'
  */
 const toWebSafeSrc = (
   asset: Asset,
@@ -724,9 +713,8 @@ const toWebSafeSrc = (
  * then invokes the callback function passed.
  *
  * @since 1.0.0
- *
- * @param {Function} fn The callback function to invoke.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Function} fn The callback function to invoke.
+ * @return {void} This function doesn't have a return statement.
  */
 const writeAssets = (fn: (_: ResponsiveImageInfo) => void): void => {
   const _: ResponsiveImageInfo = {
@@ -766,12 +754,11 @@ const writeAssets = (fn: (_: ResponsiveImageInfo) => void): void => {
  * Writes an attribute to `file`, based on `key` and `value`.
  *
  * @since 1.1.0
- *
- * @param {Object} file The file to write the attribute to.
- * @param {string} key The attribute's key to write.
- * @param {string|string[]} value The attribute's value to write.
- * @param {number} tabs The number of tabs to indent.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Object} file The file to write the attribute to.
+ * @arg {string} key The attribute's key to write.
+ * @arg {string|string[]} value The attribute's value to write.
+ * @arg {number} tabs The number of tabs to indent.
+ * @return {void} This function doesn't have a return statement.
  */
 const writeAttr = (
   file: any,
@@ -804,12 +791,11 @@ const writeAttr = (
  * Writes `tag` to `file` and then invokes the callback function passed.
  *
  * @since 1.1.0
- *
- * @param {Function} fn The callback function to invoke.
- * @param {Object} file The file to write the tag to.
- * @param {string} tag The tag to write.
- * @param {number} tabs The number of tabs to indent.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Function} fn The callback function to invoke.
+ * @arg {Object} file The file to write the tag to.
+ * @arg {string} tag The tag to write.
+ * @arg {number} tabs The number of tabs to indent.
+ * @return {void} This function doesn't have a return statement.
  */
 const writeTag = (
   fn: (tabs: number) => void,
@@ -842,9 +828,8 @@ const writeTag = (
  * Writes the responsive image's HTML snippet.
  *
  * @since 1.1.0
- *
- * @param {Object} _ The responsive image info.
- * @returns {void} This function doesn't have a return statement.
+ * @arg {Object} _ The responsive image info.
+ * @return {void} This function doesn't have a return statement.
  */
 const writeHTML = (_: ResponsiveImageInfo): void => {
   if (_.dialog.renameAssets) {

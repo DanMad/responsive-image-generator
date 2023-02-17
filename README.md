@@ -4,20 +4,21 @@ A plugin to extend Adobe® Photoshop's [Generate Image Assets](https://helpx.ado
 
 Responsive Image Generator creates HTML snippets from the asset names in your Photoshop document, so that you don't have to.
 
-## Installation
+## Getting Started
 
 1. Download the [Responsive Image Generator](https://raw.githubusercontent.com/DanMad/responsive-image-generator/master/dist/responsive-image-generator.min.jsx).
 2. Add the downloaded script to Photoshop's `Scripts` directory. The path to this directory is as follows:
 
-   - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`
-   - Windows: `C:\Program Files\Adobe\Adobe Photoshop 2020\Presets\Scripts`
+   - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2023/Presets/Scripts`
+   - Windows: `C:\Program Files\Adobe\Adobe Photoshop 2023\Presets\Scripts`
 
-   **Note:** Paths may vary from the examples above, depending on the version of Photoshop you're running.
+   **Note:** Paths may vary from the examples above, depending on your Operating
+   System and the version of Photoshop you're running.
 
 3. Open Photoshop and create a new, blank document (a document needs to be open to follow these next few steps).
 4. Navigate to `File > Scripts > Script Events Manager`. The `Script Events Manager` dialog should appear:
 
-   ![Adobe® Photoshop's Script Events Manager dialog](./images/installation-support-1.png)
+   ![Adobe® Photoshop's Script Events Manager dialog](./images/getting-started-example-1.png)
 
 5. Associate the `responsive-image-generator.min.jsx` script with the `Save Document` event by:
 
@@ -31,7 +32,7 @@ Responsive Image Generator creates HTML snippets from the asset names in your Ph
 
    The dialog should now look similar to this:
 
-   ![Adobe® Photoshop's Script Events Manager dialog with Responsive Image Generator installed](./images/installation-support-2.png)
+   ![Adobe® Photoshop's Script Events Manager dialog with Responsive Image Generator installed](./images/getting-started-example-2.png)
 
 6. Press `Done` and you're good to go!
 
@@ -45,11 +46,11 @@ Once you've successfully completed the [Installation](https://github.com/DanMad/
 
 Let's say we've just finished working on a document called `mona-lisa.psd` and it contains three assets we'd like to generate; `100x100 mona-lisa.jpg`, `200x200 mona-lisa-@2x.jpg` and `300x300 mona-lisa-@3x.jpg`:
 
-![Adobe® Photoshop's Layers panel](./images/usage-support-1.png)
+![Adobe® Photoshop's Layers panel](./images/usage-example-1.png)
 
 We're happy with our work, so we save our document and then the Responsive Image Generator's dialog appears, prompting us for the responsive image's `alt` text:
 
-![Responsive Image Generator's dialog](./images/usage-support-2.png)
+![Responsive Image Generator's dialog](./images/usage-example-2.png)
 
 **Note:** The Responsive Image Generator will name your snippet consistently with your Photoshop document's name and write each image's `src` directory as `/images` by default. Configure these if necessary, to meet your own requirements.
 
@@ -61,10 +62,7 @@ This results in `mona-lisa.html` being generated in the `mona-lisa-assets` direc
 <img
   alt="The Mona Lisa"
   src="/images/mona-lisa.jpg"
-  srcset="
-    /images/mona-lisa-@2x.jpg 2x,
-    /images/mona-lisa-@3x.jpg 3x
-  "
+  srcset="/images/mona-lisa-@2x.jpg 2x, /images/mona-lisa-@3x.jpg 3x"
 />
 ```
 
@@ -83,11 +81,11 @@ Then we'll group our orginal layer and include the additional six asset names wi
 8. `800x800 mona-lisa-lge-@2x.jpg`
 9. `1200x1200 mona-lisa-lge-@3x.jpg`
 
-![Adobe® Photoshop's Layers panel](./images/usage-support-3.png)
+![Adobe® Photoshop's Layers panel](./images/usage-example-3.png)
 
 This time, when we save our document, the Responsive Image Generator's dialog will appear with additional options so that you can also customise the responsive images breakpoints:
 
-![Responsive Image Generator's dialog](./images/usage-support-4.png)
+![Responsive Image Generator's dialog](./images/usage-example-4.png)
 
 As with the last example, we enter `"The Mona Lisa"` as `alt` text and press `Save`.
 
@@ -98,7 +96,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 48.0625em)"
     srcset="
-      /images/mona-lisa-lge.jpg 1x,
+      /images/mona-lisa-lge.jpg     1x,
       /images/mona-lisa-lge-@2x.jpg 2x,
       /images/mona-lisa-lge-@3x.jpg 3x
     "
@@ -106,7 +104,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 30.0625em)"
     srcset="
-      /images/mona-lisa-med.jpg 1x,
+      /images/mona-lisa-med.jpg     1x,
       /images/mona-lisa-med-@2x.jpg 2x,
       /images/mona-lisa-med-@3x.jpg 3x
     "
@@ -114,10 +112,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <img
     alt="The Mona Lisa"
     src="/images/mona-lisa-sml.jpg"
-    srcset="
-      /images/mona-lisa-sml-@2x.jpg 2x,
-      /images/mona-lisa-sml-@3x.jpg 3x
-    "
+    srcset="/images/mona-lisa-sml-@2x.jpg 2x, /images/mona-lisa-sml-@3x.jpg 3x"
   />
 </picture>
 ```
