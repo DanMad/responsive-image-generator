@@ -1,104 +1,140 @@
 # Responsive Image Generator
 
-A plugin to extend Adobe® Photoshop's [Generate Image Assets](https://helpx.adobe.com/au/photoshop/using/generate-assets-layers.html) feature.
+A plugin that extends Adobe® Photoshop's
+[Generate Image Assets](https://helpx.adobe.com/au/photoshop/using/generate-assets-layers.html)
+feature.
 
-Responsive Image Generator creates HTML snippets from the asset names in your Photoshop document, so that you don't have to.
+## Table of Contents
 
-## Installation
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Issues](#issues)
+- [Contributing](#contributing)
 
-1. Download the [Responsive Image Generator](https://raw.githubusercontent.com/DanMad/responsive-image-generator/master/dist/responsive-image-generator.min.jsx).
-2. Add the downloaded script to Photoshop's `Scripts` directory. The path to this directory is as follows:
+## Getting Started
 
-   - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2020/Presets/Scripts`
-   - Windows: `C:\Program Files\Adobe\Adobe Photoshop 2020\Presets\Scripts`
+1. Download the
+   [Responsive Image Generator](https://raw.githubusercontent.com/danmad/responsive-image-generator/resources/responsive-image-generator.min.jsx).
+2. Add the downloaded script to Photoshop's `Scripts` directory. The path to
+   this directory is as follows:
 
-   **Note:** Paths may vary from the examples above, depending on the version of Photoshop you're running.
+   - Mac OS: `Macintosh HD/Applications/Adobe Photoshop 2023/Presets/Scripts`
+   - Windows': `C:\Program Files\Adobe\Adobe Photoshop 2023\Presets\Scripts`
 
-3. Open Photoshop and create a new, blank document (a document needs to be open to follow these next few steps).
-4. Navigate to `File > Scripts > Script Events Manager`. The `Script Events Manager` dialog should appear:
+   **Note:** These paths may vary depending on your OS and the version of
+   Photoshop you're running.
 
-   ![Adobe® Photoshop's Script Events Manager dialog](./images/installation-support-1.png)
+3. Navigate to `File > Scripts > Script Events Manager`. The
+   `Script Events Manager` dialog should appear.
 
-5. Associate the `responsive-image-generator.min.jsx` script with the `Save Document` event by:
+   ![Adobe® Photoshop's Script Events Manager dialog](https://github.com/danmad/responsive-image-generator/blob/resources/getting-started-example-1.png)
 
-   1. Checking `Enable Events to Run Scripts/Actions`
-   2. Selecting `Save Document` from the options in the `Photoshop Event` dropdown
-   3. Selecting `responsive-image-generator.min.jsx` from the options in the `Script` dropdown
+4. Assign the `responsive-image-generator.min.jsx` script to the `Save Document` event:
 
-      **Note:** If `responsive-image-generator.min.jsx` isn't available in the `Script` dropdown, browse your file system and select it from Photoshop's `Scripts` directory.
+   1. Check `Enable Events to Run Scripts/Actions`.
+   2. Select `Save Document` from the options in the `Photoshop Event` dropdown.
+   3. Select `responsive-image-generator.min.jsx` from the options in the
+      `Script` dropdown.
 
-   4. Pressing `Add`
+      **Note:** If `responsive-image-generator.min.jsx` isn't available in the
+      `Script` dropdown, browse your file system and select it from Photoshop's
+      `Scripts` directory.
 
-   The dialog should now look similar to this:
+   4. Press `Add`.
 
-   ![Adobe® Photoshop's Script Events Manager dialog with Responsive Image Generator installed](./images/installation-support-2.png)
+   The dialog should now appear as follows.
 
-6. Press `Done` and you're good to go!
+   ![Adobe® Photoshop's Script Events Manager dialog with Responsive Image Generator installed](https://github.com/danmad/responsive-image-generator/blob/resources/getting-started-example-2.png)
+
+5. Press `Done`.
+6. As the the Responsive Image Generator is designed to extend Photoshop's
+   _Generate Image Assets_ feature, you'll also need to ensure this is toggled
+   on by checking `File > Generate > Image Assets`.
+
+Now you're good to go!
 
 ## Usage
 
-Once you've successfully completed the [Installation](https://github.com/DanMad/responsive-image-generator#installation) instructions, saving your documents will call the Responsive Image Generator. If a document's layers contain asset names, then the Responsive Image Generator's dialog will appear.
-
-**Note:** The Responsive Image Generator is designed to extend Photoshop's _Generate Image Assets_ feature. Ensure that it's toggled on by checking `File > Generate > Image Assets` before saving each document you plan to generate responsive image snippets from.
+Saving a document will call the Responsive Image Generator. If any of the
+document's layer names contain asset declarations, then the Responsive Image
+Generator's dialog will appear.
 
 ### Examples
 
-Let's say we've just finished working on a document called `mona-lisa.psd` and it contains three assets we'd like to generate; `100x100 mona-lisa.jpg`, `200x200 mona-lisa-@2x.jpg` and `300x300 mona-lisa-@3x.jpg`:
+Say you're working on a document called `mona-lisa.psd` and its layer names
+contain the following assets declarations that need to be generated:
 
-![Adobe® Photoshop's Layers panel](./images/usage-support-1.png)
+- `100x100 mona-lisa.jpg`
+- `200x200 mona-lisa-@2x.jpg`
+- `300x300 mona-lisa-@3x.jpg`
 
-We're happy with our work, so we save our document and then the Responsive Image Generator's dialog appears, prompting us for the responsive image's `alt` text:
+![Adobe® Photoshop's Layers panel](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-1.png)
 
-![Responsive Image Generator's dialog](./images/usage-support-2.png)
+You save the document and the Responsive Image Generator's dialog appears,
+prompting you for the responsive image's `alt` text.
 
-**Note:** The Responsive Image Generator will name your snippet consistently with your Photoshop document's name and write each image's `src` directory as `/images` by default. Configure these if necessary, to meet your own requirements.
+![Responsive Image Generator's dialog](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-2.png)
 
-We enter `"The Mona Lisa"` as `alt` text and press `Save`.
+You add `"The Mona Lisa"` as `alt` text and press `Save`.
 
-This results in `mona-lisa.html` being generated in the `mona-lisa-assets` directory, alongside `mona-lisa.psd`. The file will contain your responsive image snippet that you can leverage in your own projects:
+This results in a `mona-lisa.html` file being generated inside the
+`mona-lisa-assets` directory alongside the generated assets. The file contains
+an HTML pattern, referencing the generated assets.
 
 ```html
 <img
   alt="The Mona Lisa"
   src="/images/mona-lisa.jpg"
-  srcset="
-    /images/mona-lisa-@2x.jpg 2x,
-    /images/mona-lisa-@3x.jpg 3x
-  "
+  srcset="/images/mona-lisa-@2x.jpg 2x, /images/mona-lisa-@3x.jpg 3x"
 />
 ```
 
-This example can be expanded on. Let's now say we need to serve different images for different contexts; `sml`, `med` and `lge`, on top of serving different images depending on the resolution. This will mean our document's layers will now include nine asset names. First we'll rename the original three so that they include a `sml` argument:
+Expanding on this example, you now need to serve different images for different
+contexts:
 
-1. `100x100 mona-lisa-sml.jpg`
-2. `200x200 mona-lisa-sml-@2x.jpg`
-3. `300x300 mona-lisa-sml-@3x.jpg`
+- `sml`
+- `med`
+- `lge`
 
-Then we'll group our orginal layer and include the additional six asset names with `med` and `lge` arguments within the group's name:
+This is on top of already serving different images for different resolutions.
 
-4. `200x200 mona-lisa-med.jpg`
-5. `400x400 mona-lisa-med-@2x.jpg`
-6. `600x600 mona-lisa-med-@3x.jpg`
-7. `400x400 mona-lisa-lge.jpg`
-8. `800x800 mona-lisa-lge-@2x.jpg`
-9. `1200x1200 mona-lisa-lge-@3x.jpg`
+You modify the original asset declarations and include a `sml` argument:
 
-![Adobe® Photoshop's Layers panel](./images/usage-support-3.png)
+- `100x100 mona-lisa-sml.jpg`
+- `200x200 mona-lisa-sml-@2x.jpg`
+- `300x300 mona-lisa-sml-@3x.jpg`
 
-This time, when we save our document, the Responsive Image Generator's dialog will appear with additional options so that you can also customise the responsive images breakpoints:
+You then wrap the orginal layer in two, new groups and include additional asset
+declarations in the new group's layer names:
 
-![Responsive Image Generator's dialog](./images/usage-support-4.png)
+- `200x200 mona-lisa-med.jpg`
+- `400x400 mona-lisa-med-@2x.jpg`
+- `600x600 mona-lisa-med-@3x.jpg`
+- `400x400 mona-lisa-lge.jpg`
+- `800x800 mona-lisa-lge-@2x.jpg`
+- `1200x1200 mona-lisa-lge-@3x.jpg`
 
-As with the last example, we enter `"The Mona Lisa"` as `alt` text and press `Save`.
+![Adobe® Photoshop's Layers panel](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-3.png)
 
-The snippet generated in this instance leverages the `picture` and `source` elements, with `media` attributes outlining the responsive image's breakpoints:
+You save the document and the Responsive Image Generator's dialog appears with
+additional inputs, so that you can configure the responsive image's breakpoints.
+
+![Responsive Image Generator's dialog](https://github.com/danmad/responsive-image-generator/blob/resources/usage-example-4.png)
+
+You're happy with the default breakpoints, so you add `"The Mona Lisa"` as `alt`
+text and press `Save` again.
+
+The HTML pattern generated in the `mona-lisa.html` file now includes `media`
+attributes that specify the responsive image's breakpoints, as well as
+referencing the generated assets. Ensuring that different images are served for
+different resolutions _and_ different contexts.
 
 ```html
 <picture>
   <source
     media="(min-width: 48.0625em)"
     srcset="
-      /images/mona-lisa-lge.jpg 1x,
+      /images/mona-lisa-lge.jpg     1x,
       /images/mona-lisa-lge-@2x.jpg 2x,
       /images/mona-lisa-lge-@3x.jpg 3x
     "
@@ -106,7 +142,7 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <source
     media="(min-width: 30.0625em)"
     srcset="
-      /images/mona-lisa-med.jpg 1x,
+      /images/mona-lisa-med.jpg     1x,
       /images/mona-lisa-med-@2x.jpg 2x,
       /images/mona-lisa-med-@3x.jpg 3x
     "
@@ -114,18 +150,18 @@ The snippet generated in this instance leverages the `picture` and `source` elem
   <img
     alt="The Mona Lisa"
     src="/images/mona-lisa-sml.jpg"
-    srcset="
-      /images/mona-lisa-sml-@2x.jpg 2x,
-      /images/mona-lisa-sml-@3x.jpg 3x
-    "
+    srcset="/images/mona-lisa-sml-@2x.jpg 2x, /images/mona-lisa-sml-@3x.jpg 3x"
   />
 </picture>
 ```
 
 ## Issues
 
-If you encounter any bugs, please [post an issue](https://github.com/DanMad/responsive-image-generator/issues).
+If you encounter any bugs, please
+[post an issue](https://github.com/danmad/responsive-image-generator/issues/new).
 
 ## Contributing
 
-Contributions are more than welcome. Ensure you read through the [contributing guidelines](https://github.com/DanMad/responsive-image-generator/blob/master/CONTRIBUTING.md) before submitting a pull request.
+Contributions are more than welcome. Ensure you read through the
+[contributing guidelines](https://github.com/danmad/responsive-image-generator/blob/main/CONTRIBUTING.md)
+before submitting a pull request.

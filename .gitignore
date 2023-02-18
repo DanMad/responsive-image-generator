@@ -1,10 +1,12 @@
-# Artwork
-*.fig
-*.psd
-*.sketch
+# Bundle
+# dist
 
-# Dependencies
-node_modules
+# Logs
+*.log
 
-# MacOS
+# Operating System
 .DS_Store
+Thumbs.db
+
+# Packages
+node_modules

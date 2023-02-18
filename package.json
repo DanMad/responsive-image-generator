@@ -1,33 +1,38 @@
 {
   "name": "responsive-image-generator",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": "true",
-  "description": "A plugin to extend Adobe® Photoshop's Generate Image Assets feature.",
-  "homepage": "https://github.com/DanMad/responsive-image-generator#readme",
-  "bugs": "https://github.com/DanMad/responsive-image-generator/issues",
-  "repository": "https://github.com/DanMad/responsive-image-generator.git",
+  "description": "A plugin that extends Adobe® Photoshop's Generate Image Assets feature",
+  "homepage": "https://github.com/danmad/responsive-image-generator#readme",
+  "bugs": "https://github.com/danmad/responsive-image-generator/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danmad/responsive-image-generator.git"
+  },
   "license": "MIT",
-  "author": "DanMad",
+  "author": {
+    "name": "Daniel Maddison",
+    "email": "hello@danielmaddison.io",
+    "url": "https://www.danielmaddison.io"
+  },
   "scripts": {
-    "build": "npm run build:ts && npm run build:rimraf && npm run build:js",
-    "build:js": "npm run build:js:babel && npm run build:js:uglify",
-    "build:js:babel": "babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
-    "build:js:uglify": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx",
-    "build:rimraf": "rimraf dist",
-    "build:ts": "tsc --noEmit",
-    "sort-package": "sort-package-json"
+    "bootstrap": "yarn install",
+    "postbootstrap": "husky install && chmod +x .husky/*",
+    "prebuild": "rm -rf dist/*",
+    "build": "tsc --noEmit && babel src/index.ts --out-file dist/responsive-image-generator.min.jsx --extensions \".ts\"",
+    "postbuild": "uglifyjs dist/responsive-image-generator.min.jsx --compress --output dist/responsive-image-generator.min.jsx",
+    "unstrap": "rm -rf dist node_modules yarn-error.log"
   },
   "devDependencies": {
-    "@babel/cli": "^7.11.6",
-    "@babel/core": "^7.11.6",
-    "@babel/preset-env": "^7.11.5",
-    "@babel/preset-typescript": "^7.10.1",
-    "husky": "^7.0.1",
-    "lint-staged": "^11.0.0",
-    "prettier": "^2.1.2",
-    "rimraf": "^3.0.2",
-    "sort-package-json": "^1.46.0",
-    "typescript": "^4.0.3",
-    "uglify-js": "^3.10.4"
+    "@babel/cli": "^7.20.7",
+    "@babel/core": "^7.20.12",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-typescript": "^7.18.6",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.2",
+    "prettier": "^2.8.4",
+    "sort-package-json": "^2.4.1",
+    "typescript": "^4.9.5",
+    "uglify-js": "^3.17.4"
   }
 }

@@ -1,0 +1,22 @@
+---
+
+name: Pull Request (main)
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  check_package_version:
+    name: Check Package Version
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+    - run: |
+        chmod +x .github/scripts/check-package-version.sh
+        .github/scripts/check-package-version.sh

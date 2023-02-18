@@ -1,0 +1,22 @@
+---
+
+name: Push (main)
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  create_github_release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+    - run: |
+        chmod +x .github/scripts/create-github-release.sh
+        .github/scripts/create-github-release.sh
